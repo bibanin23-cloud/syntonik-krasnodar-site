@@ -1,0 +1,7 @@
+Use case: lighting-weather (background-only edit).
+Asset type: Syntonik first-screen website hero photograph.
+Input Image 1 is the current composited hero scene to edit.
+Primary request: improve photographic quality and make ONLY the ENVIRONMENT more neutral GREY and pleasantly defocused, like a refined grey automotive advertising background. Gas station canopy, columns, distant buildings, SUV and floor should have lower contrast, reduced color saturation, soft optical depth-of-field blur and no harsh busy detail. Keep the broad left area near-white/light grey so website copy stays readable; the top of the scene must blend naturally into a transparent header.
+CRITICAL invariants: preserve EXACT existing camera framing, landscape aspect ratio, positions, physical size and support/contact points of all FOUR bottles and all FOUR podiums. Left-to-right bottle order БЕНЗИН, ДИЗЕЛЬ, ГБО, МАЗУТ; all labels 250мл. All four bottles remain sharp, original shapes and black caps/white Syntonik logos/dark olive labels. Do not blur or repaint label lettering. Keep podium tops and bottle contact shadows sharp. Do not move any bottle, podium or vehicle. No new text, headline, nav, buttons, logos outside product labels, watermarks, objects or people.
+Output a high-quality, clean high-resolution landscape asset, ideally 2880x1620 or larger while preserving the input 1672:941 composition exactly; avoid artifacts and oversharpening. This is a subtle grade and background-defocus edit, not a redesign.
+

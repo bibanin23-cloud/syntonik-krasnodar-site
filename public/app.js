@@ -1,5 +1,11 @@
 import {calculate} from './lib/calculator.js';
 import {fuels,volumes} from './data/catalog.js';
+const siteHeader=document.querySelector('.site-header');
+function updateHeaderSurface(){siteHeader.classList.toggle('is-scrolled',window.scrollY>12);}
+function measureHeader(){document.documentElement.style.setProperty('--site-header-height',`${siteHeader.getBoundingClientRect().height}px`);}
+new ResizeObserver(measureHeader).observe(siteHeader);
+window.addEventListener('scroll',updateHeaderSurface,{passive:true});
+updateHeaderSurface();measureHeader();
 const money = n => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(n);
 const number = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1}).format(n);
 const calcForm = document.querySelector('#calculator-form');
@@ -49,3 +55,4 @@ leadForm.addEventListener('submit',event=>{
   if(digits.length<10||digits.length>15){leadForm.elements.phone.setCustomValidity('Введите телефон: от 10 до 15 цифр.');leadForm.elements.phone.reportValidity();return;}
   document.querySelector('#form-status').textContent='Данные заполнены. Онлайн-заявка не отправлена: приём заявок ещё не подключён. Позвоните Игорю или напишите в Telegram.';
 });
+

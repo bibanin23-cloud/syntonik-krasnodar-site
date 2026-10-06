@@ -1,0 +1,143 @@
+:root { --site-header-height: 62px; --hero-min-height: clamp(730px, 50.5vw, 900px); }
+html { scroll-padding-top: calc(var(--site-header-height) + 12px); }
+.site-header {
+  position: fixed;
+  inset: 0 0 auto;
+  min-height: 62px;
+  padding: 8px 2%;
+  gap: 22px;
+  flex-wrap: nowrap;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background-color .2s, backdrop-filter .2s, border-color .2s;
+}
+.site-header.is-scrolled {
+  background: rgb(243 245 245 / 72%);
+  backdrop-filter: blur(18px) saturate(.65);
+  -webkit-backdrop-filter: blur(18px) saturate(.65);
+  border-color: rgb(185 192 189 / 28%);
+  box-shadow: 0 4px 18px rgb(35 42 38 / 4%);
+}
+.brand-logo {
+  flex: 0 0 166px;
+  height: 42px;
+  padding-right: 20px;
+  border-right: 1px solid #b7bdbb;
+  overflow: visible;
+}
+.brand-logo img {
+  position: static;
+  display: block;
+  width: 146px;
+  height: 42px;
+  max-width: 100%;
+  object-fit: contain;
+}
+.site-header nav { gap: 22px; line-height: 1.2; scrollbar-width: none; }
+.site-header nav::-webkit-scrollbar { display: none; }
+.header-contacts { gap: 10px; }
+.site-header .phone { margin-left: 0; font-size: 15px; }
+.messenger {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  overflow: hidden;
+  background: transparent;
+}
+.messenger img {
+  position: absolute;
+  display: block;
+  width: 1180.9px;
+  height: 98px;
+  max-width: none;
+  top: -7.7px;
+  pointer-events: none;
+}
+.telegram img { left: -613.9px; }
+.max img { left: -651.7px; }
+.site-header > button {
+  min-width: 164px;
+  padding: 7px 20px;
+  font-size: 16px;
+  line-height: 1.35;
+  border-radius: 5px;
+  background: rgb(255 255 255 / 22%);
+}
+.hero--approved {
+  min-height: calc(var(--hero-min-height) + var(--site-header-height));
+  padding-top: calc(var(--site-header-height) + 24px);
+}
+.hero-background { filter: saturate(.22); }
+.hero-dose {
+  min-height: 54px;
+  gap: 16px;
+  padding: 10px 18px;
+  border: 1px solid rgb(217 221 220 / 72%);
+  border-radius: 40px;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 8px 26px rgb(66 76 70 / 8%), inset 0 1px 0 white;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 15px;
+  color: #182034;
+}
+.hero-dose svg { width: 28px; height: 28px; flex: 0 0 28px; stroke: #169b14; }
+.hero-dose strong { color: #159a10; font-size: 22px; }
+
+@media (min-width: 1800px) {
+  .hero--approved { padding-top: calc(var(--site-header-height) + 28px); }
+}
+@media (max-width: 1350px) { :root { --hero-min-height: 720px; } }
+@media (min-width: 1201px) and (max-width: 1350px) {
+  .hero-example, .hero--approved .lead { max-width: min(100%, 30vw); }
+  .hero-cta { width: min(430px, 30vw); padding: 14px 16px; font-size: 16px; gap: 14px; }
+  .hero-cta span { font-size: 28px; }
+}
+@media (max-width: 1250px) {
+  .site-header { flex-wrap: wrap; gap: 8px 18px; }
+  .site-header nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    justify-content: space-between;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .header-contacts { margin-left: auto; }
+  .site-header > button { min-width: 140px; }
+}
+@media (max-width: 1200px) {
+  .hero--approved { min-height: 0; }
+  .hero--approved::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 520px;
+    z-index: -1;
+    pointer-events: none;
+    background: url('/assets/backgrounds/hero-scene-v4.png') right top / cover no-repeat;
+    opacity: .2;
+    filter: grayscale(1) blur(4px);
+    mask-image: linear-gradient(black, transparent);
+    -webkit-mask-image: linear-gradient(black, transparent);
+  }
+}
+@media (max-width: 760px) {
+  .site-header { padding: 6px 5%; gap: 6px 9px; }
+  .brand-logo { flex-basis: 122px; height: 35px; padding-right: 0; border: 0; }
+  .brand-logo img { width: 122px; height: 35px; }
+  .site-header nav { font-size: 9px; gap: 18px; justify-content: flex-start; }
+  .site-header .phone { display: none; }
+  .header-contacts { gap: 7px; }
+  .site-header > button { min-width: 0; padding: 6px 13px; font-size: 12px; }
+  .hero--approved { padding-top: calc(var(--site-header-height) + 20px); }
+  .hero-dose { gap: 10px; padding: 10px 13px; font-size: 12px; }
+  .hero-dose strong { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
+
