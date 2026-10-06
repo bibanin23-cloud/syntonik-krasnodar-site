@@ -1,0 +1,64 @@
+/* Keep the copy in the clear part of the approved scene. */
+.hero--approved h1 { max-width: 100%; }
+.hero-cta { min-width: 0; width: min(430px, 100%); }
+
+@media (max-width: 1200px) {
+  .hero--approved {
+    padding: 24px 5% 0;
+    min-height: 0;
+  }
+  .hero-copy { width: 100%; max-width: none; }
+  .hero--approved h1 {
+    font-size: clamp(28px, 5.5vw, 66px);
+    letter-spacing: -1.5px;
+    line-height: 1.08;
+  }
+  .hero-example { max-width: 650px; margin-bottom: 24px; }
+  .hero--approved .lead { max-width: 690px; margin-bottom: 24px; }
+  .hero-scene {
+    position: relative;
+    inset: auto;
+    z-index: 0;
+    width: 100%;
+    max-width: 760px;
+    height: auto;
+    aspect-ratio: 1.18;
+    margin: 20px auto 0;
+    overflow: hidden;
+  }
+  .hero-background {
+    width: 180%;
+    height: auto;
+    max-width: none;
+    left: -65%;
+    top: -12%;
+    object-fit: contain;
+    object-position: center;
+  }
+  .hero-bottom {
+    position: relative;
+    inset: auto;
+    padding: 20px 0 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .hero-note { grid-column: 1 / -1; }
+  .hero-scene:after {
+    background: linear-gradient(0deg, white, transparent 12%, transparent 92%, white);
+  }
+}
+
+@media (max-width: 760px) {
+  .hero--approved { padding-top: 20px; }
+  .hero--approved h1 { font-size: clamp(28px, 7.1vw, 50px); }
+  .hero--approved h1 span:last-child { font-size: 1em; }
+  .hero-example { font-size: 11px; margin-bottom: 20px; }
+  .hero--approved .lead { font-size: 15px; margin-bottom: 20px; }
+  .hero-bottom { display: flex; flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 380px) {
+  .hero--approved h1 { font-size: 27px; }
+}
+
