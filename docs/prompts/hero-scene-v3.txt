@@ -1,0 +1,8 @@
+Use case: compositing.
+Asset type: website first-screen photographic hero scene.
+Input images: Image 1 is the EXISTING scene to edit; Image 2 is the user's original МАЗУТ 250мл bottle to insert; Image 3 is the original ГБО 250мл bottle reference.
+Primary request: edit ONLY the two rightmost product positions in Image 1. Keep the БЕНЗИН bottle on the round left podium and ДИЗЕЛЬ bottle on the tall central podium EXACTLY as they are. MOVE the existing ГБО bottle off its far-right square podium and place it standing on the currently EMPTY low front square podium centered near x=71.5%, with its glass bottom contacting the top surface near y=76%. PUT the МАЗУТ bottle from Image 2 on the far-right square podium centered near x=81%, where ГБО used to stand, glass bottom contacting the top near y=73%.
+Required product order left to right: БЕНЗИН, ДИЗЕЛЬ, ГБО, МАЗУТ. Exactly FOUR bottles total. Third bottle ГБО stands on the low front podium; fourth МАЗУТ stands on the far-right podium. All are 250мл and similar physical size. Every bottle stands upright, with realistic perspective and a dark soft contact shadow directly under its glass base. No floating or penetration into a podium face.
+Preserve all other pixels/composition as closely as possible: gas-station canopy, SUV, concrete/metal podiums, background, brightness, shadows of unchanged objects, broad white negative space on LEFT 45%. Preserve original bottle shapes, black caps, white Syntonik logos, olive label accents, and exact names/250мл text. Do not repaint gasoline or diesel. Do not add any headline, navigation, buttons, UI, watermark, or writing outside labels.
+Output same landscape aspect ratio 1672:941 as Image 1.
+
