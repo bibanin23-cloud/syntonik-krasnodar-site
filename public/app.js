@@ -35,14 +35,54 @@ function renderCatalog(){
 renderCatalog();
 const caseNumber=new Intl.NumberFormat('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
 const caseMileage=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
+function caseVideoEmbedUrl(videoUrl){
+  try{
+    const source=new URL(videoUrl);
+    const id=source.pathname.match(/^\/(?:video\/(?:private\/)?|shorts\/)([a-f0-9]{32})\/?$/)?.[1];
+    if(source.origin!=='https://rutube.ru'||!id)return null;
+    const embed=new URL(`https://rutube.ru/play/embed/${id}/`);
+    if(source.searchParams.has('p'))embed.searchParams.set('p',source.searchParams.get('p'));
+    return embed.href;
+  }catch{return null;}
+}
 const casePlay='<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15"/><path d="m12 9 11 7-11 7Z"/></svg>';
 document.querySelector('#cars').innerHTML=cases.map(c=>{
   const difference=c.before-c.after, percent=difference/c.before*100;
-  const video=c.videoUrl?.startsWith('https://rutube.ru/')
-    ? `<a class="case-video" href="${c.videoUrl}" target="_blank" rel="noopener" aria-label="Смотреть видео: ${c.model}">${casePlay}<span>Смотреть видео</span></a>`
+  const video=caseVideoEmbedUrl(c.videoUrl)
+    ? `<button class="case-video" type="button" data-case-video="${c.id}" aria-haspopup="dialog" aria-controls="case-video-dialog" aria-label="Смотреть видео: ${c.model}">${casePlay}<span>Смотреть видео</span></button>`
     : `<button class="case-video" type="button" disabled aria-label="Видео: ${c.model} — скоро появится">${casePlay}<span>Видео скоро появится</span></button>`;
   return `<article class="case-card" data-case-id="${c.id}" aria-labelledby="case-title-${c.id}"><div class="case-top"><div class="case-info"><p class="case-fuel">${c.fuel}</p><h3 id="case-title-${c.id}">${c.model}</h3><p class="case-meta">${c.year} · <span>${caseMileage.format(c.mileage)} км</span></p><p class="case-route">${c.route}</p></div><img class="case-car" src="${c.image}" width="${c.imageWidth||1536}" height="${c.imageHeight||1024}" alt="${c.model}" loading="lazy"></div><div class="case-consumption"><span class="case-sr-only">Расход до:</span><strong>${caseNumber.format(c.before)}</strong><span class="case-arrow" aria-hidden="true">→</span><span class="case-sr-only">После:</span><strong class="case-after">${caseNumber.format(c.after)}</strong><span class="case-unit">л / 100 км</span></div><div class="case-saving"><p class="case-difference"><strong>−${caseNumber.format(difference)}</strong><span>л / 100 км</span></p><p class="case-percent"><span>Экономия</span><strong>${caseNumber.format(percent)}%</strong></p></div>${video}</article>`;
 }).join('');
+const caseVideoDialog=document.querySelector('#case-video-dialog');
+const caseVideoPlayer=document.querySelector('#case-video-player');
+let caseVideoOpener;
+document.querySelector('#cars').addEventListener('click',event=>{
+  const button=event.target.closest('[data-case-video]');
+  if(!button)return;
+  const videoCase=cases.find(c=>c.id===button.dataset.caseVideo);
+  const embedUrl=caseVideoEmbedUrl(videoCase?.videoUrl);
+  if(!embedUrl)return;
+  caseVideoOpener=button;
+  document.querySelector('#case-video-title').textContent=`Видеоотзыв: ${videoCase.model}`;
+  const player=document.createElement('iframe');
+  player.src=embedUrl;player.title=`Видеоотзыв: ${videoCase.model}`;
+  player.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';
+  player.allowFullscreen=true;
+  player.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+  player.referrerPolicy='strict-origin-when-cross-origin';
+  caseVideoPlayer.replaceChildren(player);
+  caseVideoDialog.showModal();
+});
+document.querySelector('#close-case-video').addEventListener('click',()=>caseVideoDialog.close());
+caseVideoDialog.addEventListener('click',event=>{
+  if(event.target!==caseVideoDialog)return;
+  const bounds=caseVideoDialog.getBoundingClientRect();
+  if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)caseVideoDialog.close();
+});
+caseVideoDialog.addEventListener('close',()=>{
+  caseVideoPlayer.replaceChildren();
+  if(caseVideoOpener?.isConnected)caseVideoOpener.focus();
+});
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
 document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);
