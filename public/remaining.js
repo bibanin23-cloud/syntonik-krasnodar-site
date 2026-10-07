@@ -1,3 +1,26 @@
+// Keep screen 4 label lettering white above the bottles' background blending.
+document.querySelectorAll('#about .about-products img').forEach((image,index)=>{
+  const holder=image.parentElement;
+  const overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  const filterId=`about-label-white-${index}`,clipId=`about-label-clip-${index}`;
+  overlay.classList.add('about-label-whites');
+  overlay.setAttribute('viewBox','0 0 1122 1402');
+  overlay.setAttribute('aria-hidden','true');
+  overlay.setAttribute('focusable','false');
+  overlay.innerHTML=`<defs><filter id="${filterId}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 3 3 3 0 -6.5"/></filter><clipPath id="${clipId}"><rect x="300" y="548" width="514" height="564"/></clipPath></defs><image href="${image.getAttribute('src')}" width="1122" height="1402" filter="url(#${filterId})" clip-path="url(#${clipId})"/>`;
+  holder.append(overlay);
+  const alignLabel=()=>{
+    const bottle=image.getBoundingClientRect(),frame=holder.getBoundingClientRect();
+    const scale=Math.min(bottle.width/1122,bottle.height/1402);
+    overlay.style.left=`${bottle.left-frame.left+(bottle.width-1122*scale)/2}px`;
+    overlay.style.top=`${bottle.top-frame.top+bottle.height-1402*scale}px`;
+    overlay.style.width=`${1122*scale}px`;
+    overlay.style.height=`${1402*scale}px`;
+  };
+  new ResizeObserver(alignLabel).observe(image);
+  image.addEventListener('load',alignLabel,{once:true});
+  alignLabel();
+});
 const paths={
   molecule:'<path d="m7 20 7-4 7 4v8l-7 4-7-4Z M14 16V9m0 0 10 6m-3 9h7"/><circle cx="14" cy="6" r="3"/><circle cx="27" cy="16" r="3"/><circle cx="31" cy="24" r="3"/>',
   gear:'<path d="m15 3 6 0 1 5 4 2 4-2 3 5-3 4v5l3 3-3 6-5-2-4 2-1 4h-6l-1-4-4-2-5 2-3-6 3-3v-5l-3-4 3-5 4 2 4-2Z"/><circle cx="18" cy="19" r="6"/>',

@@ -15,8 +15,10 @@
 .about-cards h3 { font-size:clamp(15px,1.2vw,20px); text-transform:uppercase; margin:0 0 9px; }
 .about-cards p { font-size:clamp(14px,1.06vw,18px); line-height:1.3; color:#283043; }
 .about-products { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; }
-.about-products>div { min-width:0; height:100%; min-height:480px; overflow:hidden; display:flex; align-items:end; }
+.about-products>div { position:relative; min-width:0; height:100%; min-height:480px; overflow:hidden; display:flex; align-items:end; }
 .about-products img { width:190%; max-width:none; height:85%; min-height:450px; object-fit:contain; object-position:center bottom; transform:translateX(-24%); mix-blend-mode:multiply; }
+.about-products .about-label-whites { position:absolute; pointer-events:none; mix-blend-mode:normal; }
+@media(max-width:1000px) { .about-products .about-label-whites { display:none; } }
 .dose-strip { display:flex; align-items:center; gap:32px; padding:20px 30px; margin-top:20px; background:rgb(246 247 246 / 94%); border-radius:14px; }
 .dose-strip .line-icon { width:80px; height:80px; flex-basis:80px; border-radius:50%; border:1px solid #bdc4be; padding:16px; }
 .dose-strip>div { border-left:1px solid #aab3ac; padding-left:30px; }
