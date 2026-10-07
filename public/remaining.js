@@ -1,4 +1,3 @@
-import {faq} from './data/faq.js';
 const paths={
   molecule:'<path d="m7 20 7-4 7 4v8l-7 4-7-4Z M14 16V9m0 0 10 6m-3 9h7"/><circle cx="14" cy="6" r="3"/><circle cx="27" cy="16" r="3"/><circle cx="31" cy="24" r="3"/>',
   gear:'<path d="m15 3 6 0 1 5 4 2 4-2 3 5-3 4v5l3 3-3 6-5-2-4 2-1 4h-6l-1-4-4-2-5 2-3-6 3-3v-5l-3-4 3-5 4 2 4-2Z"/><circle cx="18" cy="19" r="6"/>',
@@ -24,7 +23,13 @@ const paths={
 };
 const icon=name=>`<svg viewBox="0 0 40 40" aria-hidden="true">${paths[name]||paths.question}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(e=>{e.innerHTML=icon(e.dataset.icon);e.setAttribute('aria-hidden','true');});
-const faqIcons=['shield','document','gear','car','engine','wind','fuel','bars','trend','question','bars','fuel','molecule','trend','drop','gear','fuel','sliders','sliders','fuel','fuel','flask','document','engine','snow','factory','bars','car','pin','question'];
-const escape=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const renderQuestion=item=>`<details class="faq-item" id="faq-${item.id}"><summary><span class="line-icon" aria-hidden="true">${icon(faqIcons[item.id-1])}</span><span>${escape(item.question)}</span></summary><div class="faq-answer">${item.answer.map(p=>`<p>${escape(p)}</p>`).join('')}</div></details>`;
-document.querySelector('#faq-list').innerHTML=[faq.slice(0,15),faq.slice(15)].map(items=>`<div class="faq-column">${items.map(renderQuestion).join('')}</div>`).join('');
+const faqList=document.querySelector('#faq-list');
+faqList.addEventListener('toggle',event=>{
+  const item=event.target;
+  if(item.matches('.faq-category')){
+    if(item.open)faqList.querySelectorAll('.faq-category[open]').forEach(category=>{if(category!==item)category.open=false;});
+    else item.querySelectorAll('.faq-item[open]').forEach(question=>{question.open=false;});
+  }else if(item.matches('.faq-item')&&item.open){
+    item.closest('.faq-category').querySelectorAll('.faq-item[open]').forEach(question=>{if(question!==item)question.open=false;});
+  }
+},true);
