@@ -31,6 +31,8 @@ jobs:
         run: npm install --no-save --package-lock=false sharp@0.34.5 playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Verify repository-path build before publishing
+        env:
+          VISUAL_EXPORT: ${{ contains(github.event.head_commit.message, '[visual-check]') && 'true' || 'false' }}
         run: |
           BASE_PATH="/${GITHUB_REPOSITORY#*/}" OPTIMIZE_IMAGES=true npm run build
           BASE_PATH="/${GITHUB_REPOSITORY#*/}" npm run test:browser

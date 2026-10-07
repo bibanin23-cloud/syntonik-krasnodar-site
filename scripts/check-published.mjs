@@ -35,13 +35,21 @@ try{
     }
     const geometry=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,body:document.body.scrollWidth,broken:[...document.images].filter(img=>!img.complete||!img.naturalWidth).map(img=>img.currentSrc),overflows:[...document.querySelectorAll('h1,h2,h3,.section-lead,.dealer-role,.faq-category')].filter(el=>el.getBoundingClientRect().width&&el.scrollWidth>el.clientWidth+2).map(el=>({tag:el.tagName,id:el.id,text:el.textContent.slice(0,80),width:el.clientWidth,scroll:el.scrollWidth}))}));
     report.widths.push({width,...geometry});
-    await page.screenshot({path:path.join(output,`${width}.png`),fullPage:true});
+    await page.screenshot({path:path.join(output,`${width}.jpg`),type:'jpeg',quality:90,fullPage:true});
     assert(geometry.document<=width+1&&geometry.body<=width+1,`Horizontal overflow at ${width}: ${JSON.stringify(geometry)}`);
     assert.deepEqual(geometry.broken,[],`Broken images at ${width}`);
     assert.deepEqual(geometry.overflows,[],`Clipped text at ${width}`);
+    if(process.env.VISUAL_EXPORT==='true'&&[1440,390].includes(width)){
+      for(const section of await page.locator('[data-screen]').all()){
+        const id=await section.getAttribute('data-screen');
+        const shot=await section.screenshot({type:'jpeg',quality:80});
+        console.log(`VISUAL_${width}_${id}_START:${shot.toString('base64')}:VISUAL_END`);
+      }
+    }
   }
   await page.setViewportSize({width:1440,height:900});
   await page.goto(url,{waitUntil:'load'});
+  report.performance=await page.evaluate(()=>({navigation:performance.getEntriesByType('navigation').map(entry=>({loadMs:entry.loadEventEnd,domReadyMs:entry.domContentLoadedEventEnd})),paint:performance.getEntriesByType('paint').map(entry=>({name:entry.name,ms:entry.startTime})),resources:performance.getEntriesByType('resource').length}));
   for(const href of ['#about','#benefits','#how','#cases','#dealer']){
     await page.locator(`.site-header nav a[href="${href}"]`).click();
     await page.waitForFunction(hash=>location.hash===hash,href);
@@ -97,12 +105,13 @@ try{
     await button.click();
     assert.match(await page.locator('#case-video-player iframe').getAttribute('src'),/^https:\/\/rutube\.ru\/play\/embed\/[a-f0-9]{32}\//);
     await page.locator('#close-case-video').click();
+    await page.locator('#case-video-player iframe').waitFor({state:'detached'});
     assert.equal(await page.locator('#case-video-player iframe').count(),0);
   }
   report.checks.push('six inline Rutube players and close');
   // Mock delivery verifies UI behavior without sending eight sets of real leads.
   let sent=[];
-  await page.route('https://script.google.com/macros/s/**/exec',async route=>{sent.push(JSON.parse(route.request().postData()));await new Promise(resolve=>setTimeout(resolve,250));await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,notifications:{telegram:'sent',max:'disabled'}})});});
+  await page.route('https://script.google.com/macros/s/**/exec',async route=>{sent.push(JSON.parse(route.request().postData()));await new Promise(resolve=>setTimeout(resolve,250));await route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*'},contentType:'application/json',body:JSON.stringify({success:true,notifications:{telegram:'sent',max:'disabled'}})});});
   for(const kind of ['order','callback']){
     await page.goto(url+'?utm_source=release-check&utm_medium=test&utm_campaign=prelaunch&utm_content=form&utm_term=syntonik',{waitUntil:'load'});
     if(kind==='order')await page.locator('.site-header [data-order]').click();else await page.locator('[data-callback]').last().click();
@@ -125,7 +134,7 @@ try{
   }
   await page.unroute('https://script.google.com/macros/s/**/exec');
   report.checks.push('both forms: validation, single request, success, all fields and UTM');
-  await page.route('https://script.google.com/macros/s/**/exec',route=>route.fulfill({status:503,body:'unavailable'}));
+  await page.route('https://script.google.com/macros/s/**/exec',route=>route.fulfill({status:503,headers:{'Access-Control-Allow-Origin':'*'},body:'unavailable'}));
   await page.locator('.site-header [data-order]').click();
   await page.locator('#lead-form [name="name"]').fill('Техническая проверка');
   await page.locator('#lead-form [name="phone"]').fill('+7 995 262-88-99');
