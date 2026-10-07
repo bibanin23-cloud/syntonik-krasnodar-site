@@ -51,6 +51,17 @@
 .mechanism-chain>div:last-child { border:0; padding-right:0; }
 .mechanism-chain>div:not(:last-child)::after { content:'→'; position:absolute; right:0; font-size:25px; color:var(--green); background:white; }
 .mechanism-chain strong { font-size:clamp(12px,1.04vw,17px); text-transform:uppercase; line-height:1.2; }
+@media(min-width:1001px) {
+ .how-visual { --mechanism-axis:71%; --fuel-label-offset:clamp(170px,15vw,240px); --piston-label-offset:clamp(120px,11vw,190px); }
+ .how-visual>img { transform:translateX(7%); }
+ .how-visual .image-label { top:11%; width:190px; }
+ .how-visual .image-label strong { padding:9px 12px; }
+ .how-visual .image-label p { padding:8px 12px; }
+ .how-visual .image-label.normal { left:calc(var(--mechanism-axis) - var(--fuel-label-offset)); transform:translateX(-50%); }
+ .how-visual .image-label.treated { right:auto; left:calc(var(--mechanism-axis) + var(--fuel-label-offset)); transform:translateX(-50%); }
+ .how-visual .piston-label.before { left:calc(var(--mechanism-axis) - var(--piston-label-offset)); transform:translateX(-50%); }
+ .how-visual .piston-label.after { left:calc(var(--mechanism-axis) + var(--piston-label-offset)); transform:translateX(-50%); }
+}
 .calculator-section { display:grid; grid-template-columns:1.1fr 1fr; gap:5%; background:white url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; }
 .calculator-copy h2 { font-size:clamp(42px,5.4vw,88px); letter-spacing:-3px; }
 .calculation-dose { padding:18px; border:1px solid #dce1dd; background:rgb(255 255 255 / 92%); border-radius:7px; max-width:550px; margin:25px 0 17px; }
