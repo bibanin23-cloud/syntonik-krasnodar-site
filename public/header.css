@@ -59,6 +59,7 @@ html { scroll-padding-top: calc(var(--site-header-height) + 12px); }
 }
 .telegram img { left: -613.9px; }
 .max img { left: -651.7px; }
+.site-header .messenger { clip-path: circle(calc(50% - 1.5px)); }
 .site-header > button {
   min-width: 164px;
   padding: 7px 20px;
