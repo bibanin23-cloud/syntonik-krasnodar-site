@@ -1,6 +1,8 @@
 import {calculate} from './lib/calculator.js';
 import {fuels,volumes} from './data/catalog.js';
 import {cases} from './data/cases.js';
+import {LEAD_ENDPOINT} from './lead-config.js';
+import {createLeadSubmitter,sessionUtms} from './lib/leads.js';
 import './remaining.js';
 const siteHeader=document.querySelector('.site-header');
 function updateHeaderSurface(){siteHeader.classList.toggle('is-scrolled',window.scrollY>12);}
@@ -42,10 +44,14 @@ document.querySelector('#cars').innerHTML=cases.map(c=>{
   return `<article class="case-card" data-case-id="${c.id}" aria-labelledby="case-title-${c.id}"><div class="case-top"><div class="case-info"><p class="case-fuel">${c.fuel}</p><h3 id="case-title-${c.id}">${c.model}</h3><p class="case-meta">${c.year} · <span>${caseMileage.format(c.mileage)} км</span></p><p class="case-route">${c.route}</p></div><img class="case-car" src="${c.image}" width="${c.imageWidth||1536}" height="${c.imageHeight||1024}" alt="${c.model}" loading="lazy"></div><div class="case-consumption"><span class="case-sr-only">Расход до:</span><strong>${caseNumber.format(c.before)}</strong><span class="case-arrow" aria-hidden="true">→</span><span class="case-sr-only">После:</span><strong class="case-after">${caseNumber.format(c.after)}</strong><span class="case-unit">л / 100 км</span></div><div class="case-saving"><p class="case-difference"><strong>−${caseNumber.format(difference)}</strong><span>л / 100 км</span></p><p class="case-percent"><span>Экономия</span><strong>${caseNumber.format(percent)}%</strong></p></div>${video}</article>`;
 }).join('');
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
+const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
+document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);
+let sendingLead=false;
 let formOpener;
 leadForm.elements.fuel.innerHTML=fuels.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
 leadForm.elements.volume.innerHTML=volumes.map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
 function openForm(kind,fuel,volume){
+  if(sendingLead)return;
   formOpener=document.activeElement;
   leadForm.reset();leadForm.dataset.kind=kind;
   const order=kind==='order';
@@ -55,7 +61,8 @@ function openForm(kind,fuel,volume){
   leadForm.elements.terms.required=order;
   leadForm.elements.fuel.disabled=!order;leadForm.elements.volume.disabled=!order;
   leadForm.elements.fuel.value=fuel||selectedFuel.id;leadForm.elements.volume.value=volume||'250';
-  leadForm.elements.phone.setCustomValidity('');document.querySelector('#form-status').textContent='';dialog.showModal();
+  for(const field of ['name','phone','city'])leadForm.elements[field].setCustomValidity('');
+  document.querySelector('#form-status').textContent='';dialog.showModal();
 }
 document.addEventListener('click',event=>{
   const fuelButton=event.target.closest('[data-fuel]:not([data-order])');
@@ -67,9 +74,27 @@ document.addEventListener('click',event=>{
 });
 document.querySelector('#close-dialog').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('close',()=>{if(formOpener?.isConnected)formOpener.focus();});
-leadForm.elements.phone.addEventListener('input',()=>leadForm.elements.phone.setCustomValidity(''));
-leadForm.addEventListener('submit',event=>{
-  event.preventDefault();const digits=leadForm.elements.phone.value.replace(/\D/g,'');
+for(const field of ['name','phone','city'])leadForm.elements[field].addEventListener('input',()=>leadForm.elements[field].setCustomValidity(''));
+leadForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(sendingLead)return;
+  for(const field of ['name','phone','city']){
+    const input=leadForm.elements[field];input.value=input.value.trim();
+    if(!input.value){input.setCustomValidity('Заполните поле.');input.reportValidity();return;}
+  }
+  const digits=leadForm.elements.phone.value.replace(/\D/g,'');
   if(digits.length<10||digits.length>15){leadForm.elements.phone.setCustomValidity('Введите телефон: от 10 до 15 цифр.');leadForm.elements.phone.reportValidity();return;}
-  document.querySelector('#form-status').textContent='Данные заполнены. Онлайн-заявка не отправлена: приём заявок ещё не подключён. Позвоните Игорю или напишите в Telegram.';
+  if(!leadForm.reportValidity())return;
+  const status=document.querySelector('#form-status'),button=leadForm.querySelector('[type="submit"]');
+  const fields=new FormData(leadForm),order=leadForm.dataset.kind==='order';
+  sendingLead=true;button.disabled=true;leadForm.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
+  try{
+    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:fields.get('comment')||'',
+      form:leadForm.dataset.kind,page:window.location.href,...sessionUtms,
+      consent:fields.get('consent')==='on',terms:fields.get('terms')==='on',
+      fuel:order?fuels.find(f=>f.id===fields.get('fuel'))?.name||'':'',
+      volume:order?volumes.find(v=>String(v.ml)===fields.get('volume'))?.label||'':''});
+    leadForm.reset();status.textContent='Спасибо! Заявка отправлена.';
+  }catch{status.textContent='Не удалось отправить заявку. Попробуйте ещё раз.';}
+  finally{sendingLead=false;button.disabled=false;leadForm.removeAttribute('aria-busy');}
 });
