@@ -32,7 +32,7 @@ jobs:
           node-version: '22'
       - run: npm test && npm run check
       - name: Install build and browser test tools (no runtime dependencies)
-        run: npm install --no-save --package-lock=false sharp@0.35.4 playwright@1.56.1
+        run: npm install --no-save --package-lock=false sharp@0.35.5 playwright@1.56.1
       - name: Verify repository-path build before publishing
         env:
           VISUAL_EXPORT: ${{ contains(github.event.head_commit.message, '[visual-check]') && 'true' || 'false' }}
