@@ -193,3 +193,8 @@
  .product-grid { grid-template-columns:1fr; }.product,.product:last-child { width:100%; max-width:320px; justify-self:center; grid-column:auto; }.product-photo { height:280px; }.product-photo img { height:var(--photo-height); max-height:280px; }.product .fuel-capacity { font-size:15px; }.product .product-price { font-size:27px; }
  .dealer-details>div { flex-direction:column; gap:3px; }.dealer-details dd { padding-left:31px; }.dealer-messengers { gap:8px; }.dealer-messengers>a { padding:10px 8px; font-size:14px; gap:7px; }.footer-top { flex-direction:column; }.footer-contacts { margin-left:0; }.footer-contacts>div { justify-content:start; margin-top:12px; }
 }
+@media (max-width:760px) {
+ .mechanism-chain>div:not(:last-child) { padding-right:22px; }
+ .technology-section { background-image:linear-gradient(rgb(255 255 255 / 76%),rgb(255 255 255 / 76%)),url('/assets/backgrounds/laboratory-v1.png'); }
+}
+

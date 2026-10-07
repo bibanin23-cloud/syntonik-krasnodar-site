@@ -111,6 +111,9 @@ try{
   report.checks.push('six inline Rutube players and close');
   // Mock delivery verifies UI behavior without sending eight sets of real leads.
   let sent=[];
+  // Start a fresh visitor session: first-touch UTMs correctly preserve even an
+  // empty original visit, so reusing the layout-check session would be invalid.
+  await page.evaluate(()=>sessionStorage.clear());
   await page.route('https://script.google.com/macros/s/**/exec',async route=>{sent.push(JSON.parse(route.request().postData()));await new Promise(resolve=>setTimeout(resolve,250));await route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*'},contentType:'application/json',body:JSON.stringify({success:true,notifications:{telegram:'sent',max:'disabled'}})});});
   for(const kind of ['order','callback']){
     await page.goto(url+'?utm_source=release-check&utm_medium=test&utm_campaign=prelaunch&utm_content=form&utm_term=syntonik',{waitUntil:'load'});
@@ -175,3 +178,4 @@ finally{
   await browser.close();
   if(server)await new Promise(resolve=>server.close(resolve));
 }
+

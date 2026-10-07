@@ -16,6 +16,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --ipc=host
     permissions:
       contents: read
       pages: read
@@ -29,7 +33,6 @@ jobs:
       - run: npm test && npm run check
       - name: Install build and browser test tools (no runtime dependencies)
         run: npm install --no-save --package-lock=false sharp@0.34.5 playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
       - name: Verify repository-path build before publishing
         env:
           VISUAL_EXPORT: ${{ contains(github.event.head_commit.message, '[visual-check]') && 'true' || 'false' }}
@@ -72,13 +75,16 @@ jobs:
   verify-published:
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm install --no-save --package-lock=false playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
       - name: Check the published HTTPS site
         env:
           SITE_URL: ${{ needs.deploy.outputs.page_url }}
@@ -90,3 +96,4 @@ jobs:
         with:
           name: published-browser-check
           path: test-results/published
+
