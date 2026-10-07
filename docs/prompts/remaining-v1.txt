@@ -1,0 +1,30 @@
+## industrial
+Input: docs/references/approved/Экран 4 Что такое Syntonik.png
+Transparent: false
+Use case: precise-object-edit. Asset type: wide website industrial background. Input image is the approved screen 4, an edit target. Reconstruct ONLY its photographic factory background: bright clean silver pipes and industrial chemical equipment on the right, softly blurred, reflective light grey floor at bottom, left half dissolves into near white negative space for HTML text. Preserve the source's camera, perspective and neutral white/grey lighting. Remove all interface, header, typography, cards, dosage banner, icons, honeycomb lines and all three foreground bottles completely. No new bottles, no people, no logos, no watermark, no text. Wide landscape approximately 16:9, high quality, subdued contrast. This is a reusable background for screen 4 and calculator.
+
+## mechanism
+Input: docs/references/approved/Экран 5 Как работает.png
+Transparent: false
+Use case: precise-object-edit. Asset type: website technical mechanism illustration. Input is approved screen 5. Keep only the illustration of a large realistic metal fuel injector above a single large piston, divided vertically into black carbon-deposit left half and bright clean right half, with large fuel droplets left and fine atomized spray right. Preserve source metallic textures, scale, lighting and composition, right 60% of image occupied by mechanism, left 40% bright white negative space. Reconstruct industrial blurred silver background. REMOVE all text, labels, pointer lines, numbered lists, icons, header, bottom flow strip, green panels, all typography and hexagon decorations. No letters or watermarks. Same landscape composition as input. The piston split should be clear, a didactic illustration, not a lab measurement.
+
+## laboratory
+Input: docs/references/approved/Экран 7 Промышленная технология_ документы.png
+Transparent: false
+Use case: precise-object-edit. Asset type: website laboratory/factory background. Input is approved screen 7. Remove ALL text, interface, cards, documents, buttons, icons. Reconstruct underlying neutral white grey industrial-laboratory background: refinery towers and pipes behind, glass Erlenmeyer flask at upper-right, large laboratory microscope at lower-right. Keep source composition and white/grey tone, photographic metallic and glass textures. Left 75% fades to almost white so HTML overlays remain legible. Keep approximately 16:9 landscape. No document pages, stamps, certificates, foreground UI, text, logo or watermark.
+
+## showroom
+Input: docs/references/approved/Экран 8 Выберите объём.png
+Transparent: false
+Use case: precise-object-edit. Asset type: website catalog background. Input is approved screen 8. Extract/reconstruct ONLY the bright blurred white product showroom background, shelving on upper-right, some very softly blurred dark bottles on shelves, muted green plants, reflective pale grey counter/floor. Left half bright neutral near white. Remove ALL five foreground product bottles/canister, all product cards, headings, tabs, prices, buttons, typography, hexagons and any readable shelf branding. Keep camera, perspective and softness as reference, landscape16:9. Background imagery only, absolutely no readable text, no logo, no watermark.
+
+## faq
+Input: docs/references/approved/Экран 9 частые вопросы.png
+Transparent: false
+Use case: precise-object-edit. Asset type: website FAQ workshop background. Input is approved screen 9. Reconstruct only the background: bright silver-grey automobile workshop, large truck at far right, mechanic in dark grey workwear seen from back at far-right edge. Remove ALL text, header, logo, question panels, icons, plus signs and handwriting. Remove the logo from mechanic's shirt; preserve pose. Left 75% fades to white, right workshop structure slightly blurred, neutral muted tones. No letters, branding, watermark. Wide16:9.
+
+## igor
+Input: public/assets/dealer/igor.jpeg
+Transparent: true
+Use case: background-extraction, identity-preserve. Asset type: transparent dealer portrait for website. Input is original photo of Igor, edit target. Remove ONLY the background including all blue wall, wall writing, sofa and floor. Keep this exact man, face, hairstyle, eyes, facial expression, white rolled-sleeve shirt, folded arms, watch, brown trousers and original pose. Preserve his identity and clothing, do not dress him in a suit. Clean natural edge, faithful original proportions, original full visible head-to-upper-thigh framing. Actual transparent alpha background, no replacement scene, no added text, no watermark. High quality clean cutout.
+
