@@ -1,0 +1,90 @@
+name: Publish and verify Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      test_real_lead:
+        description: Send one marked test callback to Sheets and Telegram
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      base_url: ${{ steps.pages.outputs.base_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test && npm run check
+      - name: Install build and browser test tools (no runtime dependencies)
+        run: npm install --no-save --package-lock=false sharp@0.34.5 playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify repository-path build before publishing
+        run: |
+          BASE_PATH="/${GITHUB_REPOSITORY#*/}" OPTIMIZE_IMAGES=true npm run build
+          BASE_PATH="/${GITHUB_REPOSITORY#*/}" npm run test:browser
+      - name: Read Pages settings
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Build for the actual Pages address
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}/
+          OPTIMIZE_IMAGES: 'true'
+          INDEXABLE: ${{ steps.pages.outputs.host == 'syntonik-krasnodar.ru' && 'true' || 'false' }}
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-browser-check
+          path: test-results/build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
+  verify-published:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Check the published HTTPS site
+        env:
+          SITE_URL: ${{ needs.deploy.outputs.page_url }}
+          TEST_REAL_LEAD: ${{ (inputs.test_real_lead || (github.event_name == 'push' && contains(github.event.head_commit.message, '[real-lead-test]'))) && 'true' || 'false' }}
+          REAL_LEAD_ID: release-test-${{ github.run_id }}
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: published-browser-check
+          path: test-results/published
