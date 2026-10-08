@@ -109,12 +109,13 @@ try{
     assert.equal(await page.locator('#case-video-player iframe').count(),0);
   }
   report.checks.push('six inline Rutube players and close');
-  // Mock delivery verifies UI behavior without sending eight sets of real leads.
+  // Mock delivery verifies UI behavior without sending real leads from the published site.
   let sent=[];
+  const mockLeadPattern='https://script.google.com/macros/s/**/exec';
   // Start a fresh visitor session: first-touch UTMs correctly preserve even an
   // empty original visit, so reusing the layout-check session would be invalid.
   await page.evaluate(()=>sessionStorage.clear());
-  await page.route('https://script.google.com/macros/s/**/exec',async route=>{sent.push(JSON.parse(route.request().postData()));await new Promise(resolve=>setTimeout(resolve,250));await route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*'},contentType:'application/json',body:JSON.stringify({success:true,notifications:{telegram:'sent',max:'disabled'}})});});
+  await page.route(mockLeadPattern,async route=>{sent.push(JSON.parse(route.request().postData()));await new Promise(resolve=>setTimeout(resolve,250));await route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*'},contentType:'application/json',body:JSON.stringify({success:true,notifications:{telegram:'sent',max:'disabled'}})});});
   for(const kind of ['order','callback']){
     await page.goto(url+'?utm_source=release-check&utm_medium=test&utm_campaign=prelaunch&utm_content=form&utm_term=syntonik',{waitUntil:'load'});
     if(kind==='order')await page.locator('.site-header [data-order]').click();else await page.locator('[data-callback]').last().click();
@@ -135,9 +136,9 @@ try{
     if(kind==='order'){assert(sent.at(-1).fuel);assert(sent.at(-1).volume);}
     await page.locator('#close-dialog').click();
   }
-  await page.unroute('https://script.google.com/macros/s/**/exec');
+  await page.unroute(mockLeadPattern);
   report.checks.push('both forms: validation, single request, success, all fields and UTM');
-  await page.route('https://script.google.com/macros/s/**/exec',route=>route.fulfill({status:503,headers:{'Access-Control-Allow-Origin':'*'},body:'unavailable'}));
+  await page.route(mockLeadPattern,route=>route.fulfill({status:503,headers:{'Access-Control-Allow-Origin':'*'},body:'unavailable'}));
   await page.locator('.site-header [data-order]').click();
   await page.locator('#lead-form [name="name"]').fill('Техническая проверка');
   await page.locator('#lead-form [name="phone"]').fill('+7 995 262-88-99');
@@ -147,7 +148,7 @@ try{
   await page.locator('#lead-form [type="submit"]').click();
   await page.locator('#form-status').filter({hasText:'Не удалось'}).waitFor();
   await page.locator('#close-dialog').click();
-  await page.unroute('https://script.google.com/macros/s/**/exec');
+  await page.unroute(mockLeadPattern);
   report.checks.push('form network error');
   if(process.env.TEST_REAL_LEAD==='true'){
     assert(url.startsWith('https://'),'Real delivery must be tested from the published HTTPS site');
