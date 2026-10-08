@@ -12,7 +12,7 @@ async function walk(dir){const files=[];for(const entry of await readdir(dir,{wi
 export async function build({basePath='',siteUrl='',indexable=false,optimizeImages=false,outDir=path.join(project,'dist')}={}){
   if(!/^(?:\/[a-zA-Z0-9_-]+)*\/?$/.test(basePath))throw new Error('Invalid base path');
   const base=basePath==='/'?'':basePath.replace(/\/$/,'');
-  if(indexable&&(base||siteUrl!==canonical))throw new Error('Indexing is allowed only on the final canonical domain');
+  if(indexable&&(base||![canonical,canonical.replace('https://','http://')].includes(siteUrl)))throw new Error('Indexing is allowed only on the final canonical domain');
   const output=path.resolve(outDir);
   if(output===source||source.startsWith(output+path.sep)||!output.startsWith(project+path.sep))throw new Error('Build output must be a separate directory inside the project');
   const files=await walk(source);
