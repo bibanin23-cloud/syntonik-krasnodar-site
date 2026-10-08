@@ -10,6 +10,7 @@ function measureHeader(){document.documentElement.style.setProperty('--site-head
 new ResizeObserver(measureHeader).observe(siteHeader);
 window.addEventListener('scroll',updateHeaderSurface,{passive:true});
 updateHeaderSurface();measureHeader();
+function reachGoal(name,params){try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',name,params);}catch{}}
 const money = n => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(n);
 const number = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1}).format(n);
 const calcForm = document.querySelector('#calculator-form');
@@ -96,6 +97,7 @@ function openForm(kind,fuel,volume){
   leadForm.reset();leadForm.dataset.kind=kind;
   const order=kind==='order';
   document.querySelector('#dialog-title').textContent=order?'Заказать Syntonik':'Обратный звонок';
+  reachGoal(order?'form_open_order':'form_open_callback');
   document.querySelector('#order-fields').hidden=!order;
   document.querySelector('#terms-label').hidden=!order;
   leadForm.elements.terms.required=order;
@@ -135,6 +137,16 @@ leadForm.addEventListener('submit',async event=>{
       fuel:order?fuels.find(f=>f.id===fields.get('fuel'))?.name||'':'',
       volume:order?volumes.find(v=>String(v.ml)===fields.get('volume'))?.label||'':''});
     leadForm.reset();status.textContent='Спасибо! Заявка отправлена.';
+    reachGoal(order?'lead_order_success':'lead_callback_success',{city:fields.get('city')||'',fuel:order?(fuels.find(f=>f.id===fields.get('fuel'))?.name||''):'',volume:order?(volumes.find(v=>String(v.ml)===fields.get('volume'))?.label||''):''});
   }catch{status.textContent='Не удалось отправить заявку. Попробуйте ещё раз.';}
   finally{sendingLead=false;button.disabled=false;leadForm.removeAttribute('aria-busy');}
+});
+
+document.addEventListener('click',event=>{
+  const link=event.target.closest('a[href]');
+  if(!link)return;
+  const href=link.getAttribute('href')||'';
+  if(href.startsWith('tel:'))reachGoal('click_phone');
+  else if(href.startsWith('https://t.me/'))reachGoal('click_telegram');
+  else if(href.startsWith('https://max.ru/'))reachGoal('click_max');
 });
