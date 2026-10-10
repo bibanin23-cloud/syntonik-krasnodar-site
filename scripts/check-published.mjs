@@ -76,11 +76,15 @@ try{
   }
   await page.locator('#calculator-form input[value="0.2"]').check();
   assert.match(await page.locator('#calc-result').innerText(),/14\s*688/);
-  assert.match(await page.locator('#calc-result').innerText(),/96 мл/);
+  assert.equal(await page.locator('.calc-details').getAttribute('open'),null);
+  await page.locator('.calc-details summary').click();
+  assert.match(await page.locator('#calc-details').innerText(),/8 мл/);
+  assert.match(await page.locator('#calc-details').innerText(),/176/);
+  await page.locator('.calc-details summary').click();
   await page.locator('#calculator-form [name="mileage"]').fill('');
   assert.match(await page.locator('#calc-result').innerText(),/Введите корректные/);
   await page.locator('#calculator-form [name="mileage"]').fill('1000');
-  report.checks.push('calculator 10/20/30%, empty input, annual dosage');
+  report.checks.push('calculator 10/20/30%, empty input, post-reduction monthly dosage');
   for(const fuel of ['petrol','diesel','lpg','mazut']){
     await page.locator(`#fuel-tabs [data-fuel="${fuel}"]`).click();
     assert.equal(await page.locator('#products .product').count(),5);

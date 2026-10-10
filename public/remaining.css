@@ -55,45 +55,55 @@
  .about-section .dose-strip strong { font-size:23px; }
  .about-section .dose-strip p { font-size:14px; line-height:1.35; }
 }
-.calculator-section { display:grid; grid-template-columns:1.1fr 1fr; gap:5%; background:white url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; }
+.calculator-section { display:grid; grid-template-columns:1.1fr 1fr; gap:5%; align-items:center; background:white url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; }
 .calculator-copy h2 { font-size:clamp(42px,5.4vw,88px); letter-spacing:-3px; }
-.calculation-dose { padding:18px; border:1px solid #dce1dd; background:rgb(255 255 255 / 92%); border-radius:7px; max-width:550px; margin:25px 0 17px; }
-.calculation-dose strong { display:block; font-size:clamp(27px,3vw,48px); line-height:1.15; letter-spacing:-1px; }
-.calculation-dose small { font-size:.6em; }
-.calculation-dose>span { font-size:16px; color:#525953; }
-.example-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-.example-cards>div { padding:16px 10px; border:1px solid #dce1dd; background:rgb(255 255 255 / 88%); border-radius:8px; text-align:center; }
-.example-cards img { width:55px; height:38px; object-fit:contain; vertical-align:middle; }
-.example-cards strong { font-size:clamp(13px,1.4vw,22px); vertical-align:middle; white-space:nowrap; }
-.example-cards b { display:block; margin-top:10px; padding-top:12px; border-top:1px solid #d0d7d1; color:var(--green); font-size:clamp(20px,2.1vw,34px); white-space:nowrap; }
 .small-note { color:#6f7772; font-size:12px; line-height:1.4; margin:15px 0; }
 .calculator-panel { padding:24px 30px; border:1px solid #dce1dd; border-radius:18px; background:rgb(255 255 255 / 95%); }
-.calculator-panel>h3 { font-size:clamp(27px,2.85vw,46px); letter-spacing:-1.4px; margin-bottom:18px; }
+
 .fuel-switch { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:24px; }
 .fuel-switch button { padding:10px 8px; border:2px solid #b5d5a4; color:#747b76; background:rgb(255 255 255 / 85%); font-size:18px; font-weight:500; }
 .fuel-switch button[aria-pressed=true] { color:#151815; border-color:var(--green); background:#f0f7e9; font-weight:700; }
 #calculator-form>label { display:flex; align-items:center; justify-content:space-between; gap:16px; font-weight:400; font-size:16px; margin-bottom:10px; }
 #calculator-form input[type=number] { width:47%; margin:0; padding:11px 16px; border-color:#dce1e7; border-radius:7px; font-size:20px; }
-#calculator-form fieldset { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0; }
+#calculator-form fieldset { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:18px 0; }
 #calculator-form legend { float:left; margin:0; font-weight:400; font-size:16px; }
 #calculator-form .scenarios { display:flex; gap:13px; }
 #calculator-form .scenarios label { padding:0; margin:0; border:0; font-size:16px; font-weight:400; white-space:nowrap; }
 #calculator-form input[type=radio] { width:19px; height:19px; vertical-align:middle; margin-right:6px; }
 .net-savings { border-top:1px solid #bdc5bf; padding-top:16px; }
-.net-savings .money { color:#04850b; font-size:clamp(42px,4.4vw,70px); font-weight:800; line-height:1.1; letter-spacing:-2px; }
-.net-savings .period { font-size:16px; color:#56625a; margin-left:10px; }
+.net-savings .money { color:#04850b; font-size:clamp(42px,4.4vw,70px); font-weight:800; line-height:1.1; letter-spacing:-2px; overflow-wrap:anywhere; }
+.net-savings .period { font-size:16px; color:#56625a; margin-left:10px; white-space:nowrap; }
 .net-savings .year-savings { margin:5px 0 14px; font-size:20px; }
 .net-savings .year-savings strong { color:var(--green); }
-.net-breakdown { font-size:16px; line-height:1.4; margin-bottom:18px; }
-.net-breakdown p { margin:0; }
-.calc-metrics { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid #c7cec9; padding-top:16px; margin-bottom:18px; }
-.calc-metrics>div { padding:0 12px; border-right:1px solid #c7cec9; }.calc-metrics>div:first-child { padding-left:0; }.calc-metrics>div:last-child { border:0; padding-right:0; }
-.calc-metrics strong { display:block; font-size:23px; line-height:1.15; }.calc-metrics span { color:#737c76; display:block; font-size:12px; }
-.calc-extra { display:flex; justify-content:space-between; gap:14px; font-size:15px; margin:10px 0; }.calc-extra strong { text-align:right; }
+
+
+
+
+
+
 .consultation-button { display:flex; justify-content:center; align-items:center; gap:22px; width:100%; padding:15px; font-size:18px; margin-top:20px; }
 .consultation-button span { font-size:25px; }
-.calc-comparison summary { cursor:pointer; color:var(--green); font-size:14px; }
-.calc-comparison .table-scroll { margin-top:10px; }.calc-comparison td,.calc-comparison th { padding:10px 7px; font-size:12px; }
+.calculator-copy,.calculator-panel { min-width:0; }
+.calculator-section .section-lead { margin-bottom:0; }
+.calculator-section .savings-label { font-size:17px; margin:0 0 8px; }
+.calculator-section .net-explanation { color:#56625a; font-size:14px; line-height:1.4; margin:0; }
+.calculator-section .calc-details { border-top:1px solid #dce1dd; margin-top:18px; }
+.calculator-section .calc-details summary { padding:12px 0; cursor:pointer; font-size:15px; color:var(--green); }
+.calculator-section .calc-details dl { margin:0; font-size:14px; line-height:1.4; }
+.calculator-section .calc-details dl>div { display:flex; align-items:start; justify-content:space-between; gap:14px; padding:9px 0; border-top:1px solid #e5e9e5; }
+.calculator-section .calc-details dt { min-width:0; }
+.calculator-section .calc-details dt small { font-size:12px; color:#56625a; }
+.calculator-section .calc-details dd { flex-shrink:0; margin:0; max-width:48%; overflow-wrap:anywhere; text-align:right; font-weight:700; }
+.calculator-section .small-note { font-size:12px; margin:8px 0 0; }
+@media(max-width:700px) {
+ .calculator-section.remaining { padding:28px 5%; gap:18px; }
+ .calculator-section .eyebrow { margin-bottom:12px; }
+ .calculator-section .calculator-copy h2 { margin-bottom:12px; }
+ .calculator-section .fuel-switch { margin-bottom:16px; }
+ .calculator-section .consultation-button { margin-top:16px; }
+ .calculator-section .calc-details { margin-top:14px; }
+ .calculator-section .net-savings .period { font-size:15px; }
+}
 .technology-section { padding-top:36px; padding-bottom:36px; background:white url('/assets/backgrounds/laboratory-v1.png') center/100% 100% no-repeat; }
 .technology-top { margin-bottom:54px; }.technology-top>.section-lead { max-width:1000px; }
 .technology-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:80%; margin-top:34px; }
@@ -169,7 +179,7 @@
 }
 @media(max-width:1000px) {
  .remaining { padding:40px 5%; }.remaining h2 { letter-spacing:-1.5px; }.section-lead { font-size:18px; }
- .calculator-section { grid-template-columns:1fr; gap:30px; }.calculator-copy h2 { font-size:clamp(50px,8vw,76px); }.calculator-copy .section-lead { max-width:650px; }.calculator-panel { max-width:720px; width:100%; margin:auto; padding:30px; }.calculator-panel>h3 { font-size:38px; }.example-cards { max-width:650px; }.example-cards strong { font-size:19px; }.example-cards b { font-size:29px; }#calculator-form>label,#calculator-form legend { font-size:17px; }#calculator-form .scenarios label { font-size:16px; }.net-savings .money { font-size:58px; }
+ .calculator-section { grid-template-columns:1fr; gap:30px; }.calculator-copy h2 { font-size:clamp(50px,8vw,76px); }.calculator-copy .section-lead { max-width:650px; }.calculator-panel { max-width:720px; width:100%; margin:auto; padding:30px; }#calculator-form>label,#calculator-form legend { font-size:17px; }#calculator-form .scenarios label { font-size:16px; }.net-savings .money { font-size:58px; }
  .technology-section { background-size:auto 100%; background-position:right; }.technology-cards { width:100%; }.technology-cards article { flex-direction:column; }.document-grid { grid-template-columns:1fr 1fr; width:100%; }.document-preview { height:300px; }.documents-bottom>.section-lead { font-size:18px; }
  .product-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.product-photo { height:300px; }.product-photo img { height:var(--photo-height); max-height:300px; }.product h3,.product .product-price { font-size:26px; }
  .faq-grid { width:100%; gap:15px; }.faq-category>summary { padding:20px; }.faq-category-title { font-size:21px; }.faq-item>summary { gap:14px; font-size:16px; }.faq-answer { padding-right:24px; font-size:14px; }.handwriting { font-size:22px; padding-right:0; }
@@ -178,7 +188,7 @@
 }
 @media(max-width:700px) {
  .remaining { padding:32px 5%; }.remaining .eyebrow { font-size:9px; letter-spacing:2px; margin-bottom:20px; }.remaining h2 { font-size:clamp(32px,8.5vw,48px); }.section-lead { font-size:17px; }
- .calculator-copy h2 { font-size:clamp(30px,10.3vw,70px); letter-spacing:-2px; white-space:nowrap; }.calculation-dose strong { font-size:32px; }.calculation-dose>span { font-size:13px; }.example-cards { gap:7px; }.example-cards>div { padding:12px 5px; }.example-cards img { width:45px; height:30px; }.example-cards strong { font-size:13px; display:block; }.example-cards b { font-size:20px; }.calculator-panel { padding:20px 16px; border-radius:12px; }.calculator-panel>h3 { font-size:30px; }.fuel-switch { gap:6px; }.fuel-switch button { font-size:15px; padding:9px 4px; }#calculator-form>label { font-size:14px; gap:12px; }#calculator-form input[type=number] { width:42%; padding:10px; font-size:18px; }#calculator-form fieldset { flex-direction:column; align-items:start; gap:12px; }#calculator-form legend { float:none; margin-bottom:10px; font-size:14px; }#calculator-form .scenarios { gap:22px; }.net-savings .money { font-size:46px; }.net-savings .period { font-size:13px; margin-left:6px; }.net-savings .year-savings { font-size:17px; }.net-breakdown { font-size:14px; }.calc-metrics>div { padding:0 7px; }.calc-metrics strong { font-size:19px; }.calc-metrics span { font-size:10px; }.calc-extra { font-size:13px; }.consultation-button { font-size:16px; gap:15px; }.small-note { font-size:11px; }
+ .calculator-copy h2 { font-size:clamp(30px,10.3vw,70px); letter-spacing:-2px; white-space:nowrap; }.calculator-panel { padding:20px 16px; border-radius:12px; }.fuel-switch { gap:6px; }.fuel-switch button { font-size:15px; padding:9px 4px; }#calculator-form>label { font-size:14px; gap:12px; }#calculator-form input[type=number] { width:42%; padding:10px; font-size:18px; }#calculator-form fieldset { flex-direction:column; align-items:start; gap:12px; }#calculator-form legend { float:none; margin-bottom:10px; font-size:14px; }#calculator-form .scenarios { gap:22px; }.net-savings .money { font-size:46px; }.net-savings .period { font-size:13px; margin-left:6px; }.net-savings .year-savings { font-size:17px; }.consultation-button { font-size:16px; gap:15px; }.small-note { font-size:11px; }
  .technology-top { margin-bottom:34px; }.technology-cards { grid-template-columns:1fr; gap:10px; margin-top:24px; }.technology-cards article { flex-direction:row; padding:18px; }.technology-cards h3 { font-size:15px; }.technology-cards p { font-size:14px; }.document-grid { grid-template-columns:1fr; max-width:440px; margin:auto; }.document-card { padding:18px; }.document-card h3 { font-size:20px; }.document-preview { height:330px; }.document-card>p { min-height:0; }.document-actions a,.instruction-card button { font-size:15px; padding:11px; }
  .catalog-section h2 { font-size:clamp(40px,10vw,60px); margin:24px 0; }.product-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.product { padding:12px 9px; }.product-photo { height:230px; }.product-photo img { height:calc(var(--photo-height) * .7); max-height:230px; }.product h3 { font-size:24px; }.product .product-price { font-size:23px; margin:0 4px 10px; }.product .fuel-capacity { font-size:12px; }.product button { font-size:15px; }.product:last-child { grid-column:1/-1; max-width:300px; width:100%; justify-self:center; }
  .faq-heading { display:block; }.faq-heading h2 { font-size:clamp(38px,10vw,60px); }.handwriting { display:none; }.faq-grid { grid-template-columns:1fr; gap:12px; }.faq-category>summary { padding:18px; gap:14px; }.faq-category-title { font-size:20px; }.faq-questions { padding:0 16px 4px; }.faq-item>summary { font-size:15px; gap:12px; padding:12px 0; }.faq-answer { padding:0 22px 15px 0; font-size:14px; }.faq-hint { font-size:12px; }
@@ -187,7 +197,7 @@
 }
 @media(max-width:360px) {
  .remaining .eyebrow { font-size:8px; letter-spacing:1.3px; }
- .calculator-panel { padding:18px 12px; }.calculator-panel>h3 { font-size:27px; }.example-cards b { font-size:17px; }.net-savings .money { font-size:40px; }.calc-metrics strong { font-size:17px; }.calculation-dose strong { font-size:28px; }
+ .calculator-panel { padding:18px 12px; }.net-savings .money { font-size:40px; }
  .product-grid { grid-template-columns:1fr; }.product,.product:last-child { width:100%; max-width:320px; justify-self:center; grid-column:auto; }.product-photo { height:280px; }.product-photo img { height:var(--photo-height); max-height:280px; }.product .fuel-capacity { font-size:15px; }.product .product-price { font-size:27px; }
  .dealer-details>div { flex-direction:column; gap:3px; }.dealer-details dd { padding-left:31px; }.dealer-messengers { gap:8px; }.dealer-messengers>a { padding:10px 8px; font-size:14px; gap:7px; }.footer-top { flex-direction:column; }.footer-contacts { margin-left:0; }.footer-contacts>div { justify-content:start; margin-top:12px; }
 }

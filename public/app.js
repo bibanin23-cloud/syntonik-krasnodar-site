@@ -14,14 +14,14 @@ const money = n => new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB
 const number = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:1}).format(n);
 const calcForm = document.querySelector('#calculator-form');
 function updateCalculator(){
-  const data=new FormData(calcForm), target=document.querySelector('#calc-result'), comparison=document.querySelector('#comparison');
-  if(!calcForm.checkValidity()){target.textContent='Введите корректные расход, пробег и цену топлива.';comparison.replaceChildren();return;}
+  const data=new FormData(calcForm), target=document.querySelector('#calc-result'), details=document.querySelector('#calc-details');
+  if(!calcForm.checkValidity()){target.textContent='Введите корректные расход, пробег и цену топлива.';details.replaceChildren();return;}
   try{
     const c=Number(data.get('consumption')),m=Number(data.get('mileage')),p=Number(data.get('price')),s=Number(data.get('scenario'));
     const result=calculate(c,m,p,s);
-    target.innerHTML=`<div class="net-savings"><div><strong class="money">${money(result.netMonthlySavings)}</strong><span class="period">в месяц</span></div><p class="year-savings">Чистая экономия в год — <strong>${money(result.netYearlySavings)}</strong></p><div class="net-breakdown"><p>Экономия на топливе — <strong>${money(result.monthlySavings)}</strong></p><p>Стоимость Syntonik — <strong>${money(result.syntonikCostMonth)}</strong></p></div><div class="calc-metrics"><div><strong>${number(result.fuelBefore)}</strong><span>л сейчас / месяц</span></div><div><strong>${number(result.fuelAfter)}</strong><span>л после / месяц</span></div><div><strong>${number(result.monthlySavings)}</strong><span>₽ на топливе</span></div><div><strong>${number(result.syntonikCostMonth)}</strong><span>₽ Syntonik</span></div></div><div class="calc-extra"><span>Расход до → после</span><strong>${number(c)} → ${number(result.consumptionAfter)} л/100 км</strong></div><div class="calc-extra"><span>Расход Syntonik в год</span><strong>${number(result.syntonikMlYear)} мл</strong></div></div>`;
-    comparison.innerHTML=[0.1,0.2,0.3].map(r=>{const v=calculate(c,m,p,r);return `<tr class="${r===s?'selected':''}"><th scope="row">${r*100}%</th><td>${money(v.netMonthlySavings)}</td><td>${money(v.netYearlySavings)}</td><td>${number(v.syntonikMlYear)} мл</td></tr>`}).join('');
-  }catch{target.textContent='Проверьте исходные данные.';comparison.replaceChildren();}
+    target.innerHTML=`<div class="net-savings"><p class="savings-label">Ваша возможная экономия</p><div><strong class="money">${money(result.netMonthlySavings)}</strong><span class="period">в месяц</span></div><p class="year-savings"><strong>${money(result.netYearlySavings)}</strong> за год</p><p class="net-explanation">Чистая экономия после вычета стоимости израсходованного Syntonik.</p></div>`;
+    details.innerHTML=`<div><dt>Топливо до снижения / месяц</dt><dd>${number(result.fuelBefore)} л</dd></div><div><dt>Топливо после снижения / месяц</dt><dd>${number(result.fuelAfter)} л</dd></div><div><dt>Экономия на топливе / месяц</dt><dd>${money(result.monthlySavings)}</dd></div><div><dt>Расход Syntonik / месяц<br><small>1 мл на 10 л топлива после снижения</small></dt><dd>${number(result.syntonikMlMonth)} мл</dd></div><div><dt>Стоимость Syntonik / месяц</dt><dd>${money(result.syntonikCostMonth)}</dd></div><div><dt>Чистая экономия / месяц</dt><dd>${money(result.netMonthlySavings)}</dd></div>`;
+  }catch{target.textContent='Проверьте исходные данные.';details.replaceChildren();}
 }
 calcForm.addEventListener('input',updateCalculator);updateCalculator();
 let selectedFuel=fuels[0];
@@ -33,6 +33,15 @@ function renderCatalog(){
   document.querySelector('#products').innerHTML=volumes.map(v=>`<article class="product" aria-label="Syntonik ${selectedFuel.name}, ${v.label}"><div class="product-photo photo-${v.ml}"><img src="/assets/products/${selectedFuel.id}-${v.ml}.png" width="1122" height="1402" loading="lazy" alt="Syntonik ${selectedFuel.name}, ${v.label}"></div><h3>${v.label}</h3><p class="fuel-capacity">до ${number(v.ml*10)} л топлива</p><strong class="product-price">${money(v.price)}</strong><button data-order data-volume="${v.ml}" data-fuel="${selectedFuel.id}" aria-label="Заказать Syntonik ${selectedFuel.name}, ${v.label}">Заказать</button></article>`).join('');
 }
 renderCatalog();
+document.querySelector('#calculator-catalog').addEventListener('click',event=>{
+  if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  event.preventDefault();
+  selectedFuel=calculatorFuel;renderCatalog();
+  const catalog=document.querySelector('#catalog');
+  catalog.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth',block:'start'});
+  document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus({preventScroll:true});
+  history.replaceState(null,'','#catalog');
+});
 const caseGrid=document.querySelector('#cars');
 const caseCards=[...caseGrid.querySelectorAll('.case-card')];
 const caseControls=document.querySelector('.cases-controls');
