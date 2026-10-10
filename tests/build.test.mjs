@@ -22,10 +22,12 @@ test('preview build resolves repository paths without changing approved content'
     assert.ok(about);
     assert.equal((about.match(/<h2 /g)||[]).length,1);
     assert.equal((about.match(/<article>/g)||[]).length,4);
-    assert.equal((about.match(/<img /g)||[]).length,4);
+    assert.equal((about.match(/<img /g)||[]).length,1);
+    assert.doesNotMatch(about,/about-products/);
+    assert.match(about,/<figcaption><span>Обычное топливо<\/span><span>Syntonik<\/span><\/figcaption>/);
     assert.doesNotMatch(about,/class="eyebrow"/);
     assert.match(about,/SYNTONIK — БОЛЬШЕ, <em>ЧЕМ ПРИСАДКА К ТОПЛИВУ/);
-    assert.match(about,/src="\/syntonik-krasnodar-site\/assets\/backgrounds\/mechanism-v1\.png"/);
+    assert.match(about,/src="\/syntonik-krasnodar-site\/assets\/backgrounds\/mechanism-integrated-v1\.png"/);
     assert.equal((html.match(/class="faq-item"/g)||[]).length,30);
     assert.equal((html.match(/class="case-card"/g)||[]).length,6);
     assert.equal((html.match(/<a class="case-video"/g)||[]).length,6);
