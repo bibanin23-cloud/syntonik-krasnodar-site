@@ -28,21 +28,17 @@
 }
 .fuel-quality h2 span { display: block; }
 @media (min-width: 1001px) { .fuel-quality h2 span { white-space: nowrap; } }
-.fuel-lead { max-width: 53%; margin-bottom: 36px; font-size: clamp(16px, 1.27vw, 22px); line-height: 1.4; }
 .fuel-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; width: 70%; margin-bottom: 28px; }
 .fuel-card { position: relative; isolation: isolate; overflow: hidden; padding: 22px; border: 1px solid #d8dddf; border-radius: 14px; background: white; }
 .fuel-card-illustration { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: right center; mask-image: linear-gradient(90deg, transparent 64%, black 93%); }
-.fuel-card-heading { display: flex; align-items: flex-start; gap: 18px; min-height: 118px; }
+.fuel-card-heading { display: flex; align-items: flex-start; gap: 18px; min-height: 118px; max-width: 75%; }
 .fuel-card-heading > div { flex: 1; min-width: 0; }
 .fuel-card-icon { width: 56px; height: 64px; flex: 0 0 56px; fill: none; stroke: var(--green); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.fuel-card h3 { position: relative; margin: 0 0 3px; font-size: clamp(24px, 2.15vw, 36px); line-height: 1.1; letter-spacing: -1px; text-transform: uppercase; white-space: nowrap; }
-.fuel-card-heading p { position: relative; max-width: min(260px, calc(100% - 64px)); margin: 0; color: var(--ink); font-size: clamp(14px, 1.02vw, 18px); line-height: 1.35; }
-.fuel-card-body { position: relative; width: 64%; padding-top: 14px; border-top: 1px solid #cdd2d3; margin: 0; color: #414542; font-size: clamp(13px, .92vw, 16px); line-height: 1.35; }
-.fuel-warning { display: flex; align-items: center; gap: 28px; padding: 17px 28px; border-radius: 10px; background: linear-gradient(110deg, #171917, #0a0c0b); color: white; }
-.fuel-warning > svg { width: 67px; height: 67px; flex: 0 0 67px; fill: none; stroke: #85cb45; stroke-width: 3; stroke-linecap: round; }
-.fuel-warning .warning-dot { fill: #85cb45; stroke: none; }
-.fuel-warning p { margin: 0; padding-left: 28px; border-left: 1px solid #85cb45; font-size: clamp(18px, 1.72vw, 30px); font-weight: 700; line-height: 1.25; letter-spacing: -.5px; text-transform: uppercase; }
-.fuel-warning em { color: #85cb45; }
+.fuel-card h3 { position: relative; margin: 0 0 8px; font-size: clamp(24px, 2.15vw, 36px); line-height: 1.1; letter-spacing: -1px; text-transform: uppercase; }
+.fuel-card-heading p { position: relative; margin: 0; color: var(--ink); font-size: clamp(14px, 1.02vw, 18px); line-height: 1.35; }
+.fuel-quality .fuel-results-link { display: inline-block; min-height: 44px; padding: 10px 0; color: var(--ink); font-size: 16px; line-height: 1.4; border-radius: 4px; }
+.fuel-quality .fuel-results-link:hover { color: var(--green); }
+.fuel-quality .fuel-results-link:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
 
 @media (max-width: 1350px) {
   .fuel-quality { min-height: 0; }
@@ -51,14 +47,11 @@
   .fuel-card-heading { gap: 12px; min-height: 114px; }
   .fuel-card-icon { width: 45px; flex-basis: 45px; height: 54px; }
   .fuel-card h3 { font-size: 2.1vw; }
-  .fuel-warning { padding: 18px 22px; gap: 22px; }
-  .fuel-warning p { padding-left: 22px; }
 }
 @media (max-width: 1000px) {
   .fuel-quality { padding: 28px 5% 30px; }
-  .fuel-quality h2, .fuel-lead { max-width: 100%; }
+  .fuel-quality h2 { max-width: 100%; }
   .fuel-quality h2 { font-size: clamp(36px, 7.1vw, 70px); }
-  .fuel-lead { max-width: 700px; margin-bottom: 16px; font-size: 17px; }
   .fuel-visual { position: relative; inset: auto; z-index: 0; width: 100%; height: 350px; margin: 0 0 20px; overflow: hidden; }
   .fuel-visual img { position: absolute; width: 180%; max-width: none; left: -80%; height: 100%; object-fit: cover; }
   .fuel-visual::after { background: linear-gradient(0deg, white, transparent 15%, transparent 85%, white); }
@@ -66,40 +59,19 @@
   .fuel-card-heading { min-height: 112px; }
   .fuel-card h3 { font-size: clamp(24px, 3.2vw, 32px); }
   .fuel-card-heading p { font-size: 15px; }
-  .fuel-card-body { font-size: 14px; }
-  .fuel-warning p { font-size: 20px; }
 }
 @media (max-width: 760px) {
-  .fuel-quality .eyebrow { font-size: 9px; letter-spacing: 1.8px; gap: 12px; margin-bottom: 22px; }
+  .fuel-quality { padding: 22px 5% 20px; }
+  .fuel-quality .eyebrow { font-size: 9px; letter-spacing: 1.8px; gap: 12px; margin-bottom: 14px; }
   .fuel-quality .eyebrow::before { width: 30px; flex-basis: 30px; }
-  .fuel-quality h2 { font-size: clamp(25px, 6.4vw, 48px); letter-spacing: -1px; line-height: 1.06; margin-bottom: 20px; }
-  .fuel-lead { font-size: 15px; line-height: 1.45; }
-  .fuel-visual { width: 111.2%; height: auto; aspect-ratio: 1.4; margin: 0 -5.6% 18px; }
-  .fuel-cards { grid-template-columns: 1fr; gap: 14px; margin-bottom: 22px; }
-  .fuel-card { --fuel-card-padding: 20px; display: flex; flex-direction: column; padding: var(--fuel-card-padding); }
-  .fuel-card-heading { gap: 16px; min-height: 110px; }
-  .fuel-card-icon { width: 48px; flex-basis: 48px; height: 54px; }
-  .fuel-card h3 { font-size: clamp(24px, 5vw, 31px); }
-  .fuel-card-heading p { max-width: 100%; font-size: 15px; }
-  .fuel-card-illustration {
-    position: static; z-index: auto; order: 1; flex-shrink: 0;
-    width: calc(100% + var(--fuel-card-padding) + var(--fuel-card-padding)); max-width: none;
-    height: clamp(160px, 45vw, 230px);
-    margin: 18px calc(0px - var(--fuel-card-padding)) calc(0px - var(--fuel-card-padding));
-    mask-image: none;
-  }
-  .fuel-card-body { width: 100%; font-size: 13px; }
-  .fuel-warning { align-items: flex-start; gap: 13px; padding: 20px 16px; }
-  .fuel-warning > svg { width: 34px; height: 34px; flex-basis: 34px; margin-top: 3px; }
-  .fuel-warning p { padding-left: 13px; font-size: 17px; line-height: 1.35; letter-spacing: -.3px; }
-}
-@media (max-width: 380px) {
-  .fuel-quality h2 { font-size: 6.3vw; }
-  .fuel-card { --fuel-card-padding: 17px; padding: var(--fuel-card-padding); }
-  .fuel-card-heading { gap: 10px; }
-  .fuel-card-icon { width: 38px; flex-basis: 38px; height: 46px; }
-  .fuel-card h3 { font-size: 23px; }
-  .fuel-card-heading p { font-size: 14px; }
-  .fuel-card-body { font-size: 13px; }
-  .fuel-warning p { font-size: 15px; }
+  .fuel-quality h2 { font-size: clamp(25px, 6.4vw, 48px); letter-spacing: -1px; line-height: 1.06; margin-bottom: 16px; }
+  .fuel-visual { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; margin: 0; }
+  .fuel-visual::after { background: linear-gradient(90deg, rgb(255 255 255 / 94%), rgb(255 255 255 / 82%)); }
+  .fuel-cards { grid-template-columns: 1fr; gap: 12px; margin-bottom: 8px; }
+  .fuel-card { padding: 14px; }
+  .fuel-card-heading { gap: 12px; min-height: 0; max-width: none; }
+  .fuel-card-icon { width: 36px; flex-basis: 36px; height: 44px; }
+  .fuel-card h3 { font-size: 20px; line-height: 1.2; letter-spacing: -.5px; margin-bottom: 6px; }
+  .fuel-card-heading p { font-size: 16px; line-height: 1.4; }
+  .fuel-card-illustration { display: none; }
 }
