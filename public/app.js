@@ -1,6 +1,6 @@
 import {calculate} from './lib/calculator.js';
 import {fuels,volumes} from './data/catalog.js';
-import {cases} from './data/cases.js';
+import {cases,caseVideoEmbedUrl} from './data/cases.js';
 import {LEAD_ENDPOINT} from './lead-config.js';
 import {createLeadSubmitter,sessionUtms} from './lib/leads.js';
 import './remaining.js';
@@ -33,35 +33,57 @@ function renderCatalog(){
   document.querySelector('#products').innerHTML=volumes.map(v=>`<article class="product" aria-label="Syntonik ${selectedFuel.name}, ${v.label}"><div class="product-photo photo-${v.ml}"><img src="/assets/products/${selectedFuel.id}-${v.ml}.png" width="1122" height="1402" loading="lazy" alt="Syntonik ${selectedFuel.name}, ${v.label}"></div><h3>${v.label}</h3><p class="fuel-capacity">до ${number(v.ml*10)} л топлива</p><strong class="product-price">${money(v.price)}</strong><button data-order data-volume="${v.ml}" data-fuel="${selectedFuel.id}" aria-label="Заказать Syntonik ${selectedFuel.name}, ${v.label}">Заказать</button></article>`).join('');
 }
 renderCatalog();
-const caseNumber=new Intl.NumberFormat('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
-const caseMileage=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
-function caseVideoEmbedUrl(videoUrl){
-  try{
-    const source=new URL(videoUrl);
-    const id=source.pathname.match(/^\/(?:video\/(?:private\/)?|shorts\/)([a-f0-9]{32})\/?$/)?.[1];
-    if(source.origin!=='https://rutube.ru'||!id)return null;
-    const embed=new URL(`https://rutube.ru/play/embed/${id}/`);
-    if(source.searchParams.has('p'))embed.searchParams.set('p',source.searchParams.get('p'));
-    return embed.href;
-  }catch{return null;}
+const caseGrid=document.querySelector('#cars');
+const caseCards=[...caseGrid.querySelectorAll('.case-card')];
+const caseControls=document.querySelector('.cases-controls');
+const casePrevious=document.querySelector('#cases-prev');
+const caseNext=document.querySelector('#cases-next');
+const casePosition=document.querySelector('#cases-position');
+const mobileCases=matchMedia('(max-width:700px)');
+let activeCase=0,caseScrollFrame=0,caseGridWidth=0;
+function updateCaseControls(){
+  caseControls.hidden=!mobileCases.matches;
+  const label=`${activeCase+1} из ${caseCards.length}`;
+  if(casePosition.textContent!==label)casePosition.textContent=label;
+  casePrevious.disabled=activeCase===0;
+  caseNext.disabled=activeCase===caseCards.length-1;
 }
-const casePlay='<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15"/><path d="m12 9 11 7-11 7Z"/></svg>';
-document.querySelector('#cars').innerHTML=cases.map(c=>{
-  const difference=c.before-c.after, percent=difference/c.before*100;
-  const video=caseVideoEmbedUrl(c.videoUrl)
-    ? `<button class="case-video" type="button" data-case-video="${c.id}" aria-haspopup="dialog" aria-controls="case-video-dialog" aria-label="Смотреть видео: ${c.model}">${casePlay}<span>Смотреть видео</span></button>`
-    : `<button class="case-video" type="button" disabled aria-label="Видео: ${c.model} — скоро появится">${casePlay}<span>Видео скоро появится</span></button>`;
-  return `<article class="case-card" data-case-id="${c.id}" aria-labelledby="case-title-${c.id}"><div class="case-top"><div class="case-info"><p class="case-fuel">${c.fuel}</p><h3 id="case-title-${c.id}">${c.model}</h3><p class="case-meta">${c.year} · <span>${caseMileage.format(c.mileage)} км</span></p><p class="case-route">${c.route}</p></div><img class="case-car" src="${c.image}" width="${c.imageWidth||1536}" height="${c.imageHeight||1024}" alt="${c.model}" loading="lazy"></div><div class="case-consumption"><span class="case-sr-only">Расход до:</span><strong>${caseNumber.format(c.before)}</strong><span class="case-arrow" aria-hidden="true">→</span><span class="case-sr-only">После:</span><strong class="case-after">${caseNumber.format(c.after)}</strong><span class="case-unit">л / 100 км</span></div><div class="case-saving"><p class="case-difference"><strong>−${caseNumber.format(difference)}</strong><span>л / 100 км</span></p><p class="case-percent"><span>Экономия</span><strong>${caseNumber.format(percent)}%</strong></p></div>${video}</article>`;
-}).join('');
+function scrollToCase(index,smooth=false){
+  const left=caseCards[index].getBoundingClientRect().left-caseGrid.getBoundingClientRect().left+caseGrid.scrollLeft;
+  caseGrid.scrollTo({left,behavior:smooth&&!matchMedia('(prefers-reduced-motion:reduce)').matches?'smooth':'instant'});
+}
+function syncScrolledCase(){
+  caseScrollFrame=0;
+  if(!mobileCases.matches)return;
+  const left=caseGrid.getBoundingClientRect().left;
+  activeCase=caseCards.reduce((closest,card,index)=>Math.abs(card.getBoundingClientRect().left-left)<Math.abs(caseCards[closest].getBoundingClientRect().left-left)?index:closest,0);
+  updateCaseControls();
+}
+caseGrid.addEventListener('scroll',()=>{if(!caseScrollFrame)caseScrollFrame=requestAnimationFrame(syncScrolledCase);},{passive:true});
+casePrevious.addEventListener('click',()=>scrollToCase(Math.max(0,activeCase-1),true));
+caseNext.addEventListener('click',()=>scrollToCase(Math.min(caseCards.length-1,activeCase+1),true));
+caseGrid.addEventListener('keydown',event=>{
+  if(!mobileCases.matches||event.target!==caseGrid||!['ArrowLeft','ArrowRight'].includes(event.key))return;
+  event.preventDefault();scrollToCase(Math.max(0,Math.min(caseCards.length-1,activeCase+(event.key==='ArrowRight'?1:-1))),true);
+});
+new ResizeObserver(()=>{
+  const width=caseGrid.clientWidth;
+  if(width===caseGridWidth)return;
+  caseGridWidth=width;updateCaseControls();
+  if(mobileCases.matches)scrollToCase(activeCase);else caseGrid.scrollLeft=0;
+}).observe(caseGrid);
+mobileCases.addEventListener('change',()=>{updateCaseControls();if(mobileCases.matches)scrollToCase(activeCase);else caseGrid.scrollLeft=0;});
+updateCaseControls();
 const caseVideoDialog=document.querySelector('#case-video-dialog');
 const caseVideoPlayer=document.querySelector('#case-video-player');
 let caseVideoOpener;
-document.querySelector('#cars').addEventListener('click',event=>{
+caseGrid.addEventListener('click',event=>{
   const button=event.target.closest('[data-case-video]');
-  if(!button)return;
+  if(!button||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||typeof caseVideoDialog.showModal!=='function')return;
   const videoCase=cases.find(c=>c.id===button.dataset.caseVideo);
   const embedUrl=caseVideoEmbedUrl(videoCase?.videoUrl);
   if(!embedUrl)return;
+  event.preventDefault();
   caseVideoOpener=button;
   document.querySelector('#case-video-title').textContent=`Видеоотзыв: ${videoCase.model}`;
   const player=document.createElement('iframe');
@@ -81,7 +103,7 @@ caseVideoDialog.addEventListener('click',event=>{
 });
 caseVideoDialog.addEventListener('close',()=>{
   caseVideoPlayer.replaceChildren();
-  if(caseVideoOpener?.isConnected)caseVideoOpener.focus();
+  if(caseVideoOpener?.isConnected)caseVideoOpener.focus({preventScroll:true});
 });
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);

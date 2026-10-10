@@ -14,9 +14,16 @@ test('preview build resolves repository paths without changing approved content'
     assert.match(html,/content="noindex,nofollow"/);
     assert.match(html,/rel="canonical" href="https:\/\/syntonik-krasnodar\.ru\/"/);
     assert.match(app,/\/syntonik-krasnodar-site\/assets\/products\/\$\{selectedFuel.id\}/);
-    assert.match(app,/\^\\\//); // Rutube validation regex is not a path.
+    assert.match(await readFile(outDir+'data/cases.js','utf8'),/\^\\\//); // Rutube validation regex is not a path.
     assert.deepEqual([...html.matchAll(/data-screen="(\d+)"/g)].map(m=>+m[1]),Array.from({length:11},(_,i)=>i+1));
     assert.equal((html.match(/class="faq-item"/g)||[]).length,30);
+    assert.equal((html.match(/class="case-card"/g)||[]).length,6);
+    assert.equal((html.match(/<a class="case-video"/g)||[]).length,6);
+    assert.match(html,/src="\/syntonik-krasnodar-site\/assets\/cars\/haval-cutout-v1\.png"/);
+    assert.match(html,/data-case-id="haval"[\s\S]*?class="case-meta">2026/);
+    assert.match(html,/data-case-id="touareg"[\s\S]*?class="case-fuel">Дизель/);
+    assert.doesNotMatch(html,/CASE_CARDS|CASE_POSITION|cases-people/);
+    assert.doesNotMatch(app,/#cars['"]\)\.innerHTML/);
     assert.match(await readFile(outDir+'robots.txt','utf8'),/Disallow: \//);
   }finally{await rm(outDir,{recursive:true,force:true});}
 });

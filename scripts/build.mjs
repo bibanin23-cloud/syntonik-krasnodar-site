@@ -2,12 +2,33 @@ import {readdir,readFile,writeFile,mkdir,rm,stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
+import {cases,caseVideoEmbedUrl} from '../public/data/cases.js';
 
 const project=path.resolve(fileURLToPath(new URL('../',import.meta.url)));
 const source=path.join(project,'public');
 const canonical='https://syntonik-krasnodar.ru/';
 const require=createRequire(import.meta.url);
 async function walk(dir){const files=[];for(const entry of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);files.push(...(entry.isDirectory()?await walk(file):[file]));}return files;}
+
+const caseNumber=new Intl.NumberFormat('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
+const caseMileage=new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0});
+const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const casePlay='<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15"/><path d="m12 9 11 7-11 7Z"/></svg>';
+
+export function renderCaseCards(items=cases){
+  return items.map(c=>{
+    const difference=c.before-c.after,percent=difference/c.before*100;
+    const video=caseVideoEmbedUrl(c.videoUrl)
+      ? `<a class="case-video" href="${escapeHtml(c.videoUrl)}" target="_blank" rel="noopener noreferrer" data-case-video="${escapeHtml(c.id)}" aria-haspopup="dialog" aria-controls="case-video-dialog" aria-label="Смотреть видеоотзыв: ${escapeHtml(c.model)}">${casePlay}<span>Смотреть видеоотзыв</span></a>`
+      : `<button class="case-video" type="button" disabled aria-label="Видеоотзыв скоро появится: ${escapeHtml(c.model)}">${casePlay}<span>Видеоотзыв скоро появится</span></button>`;
+    return `<article class="case-card" data-case-id="${escapeHtml(c.id)}" aria-labelledby="case-title-${escapeHtml(c.id)}"><div class="case-top"><div class="case-info"><p class="case-fuel">${escapeHtml(c.fuel)}</p><h3 id="case-title-${escapeHtml(c.id)}">${escapeHtml(c.model)}</h3><p class="case-meta">${c.year} · <span>${caseMileage.format(c.mileage)} км</span></p><p class="case-route">${escapeHtml(c.route)}</p></div><img class="case-car" src="${escapeHtml(c.image)}" width="${c.imageWidth||1536}" height="${c.imageHeight||1024}" alt="${escapeHtml(c.model)}" loading="lazy"></div><div class="case-consumption"><strong><span class="case-reading-label">До</span>${caseNumber.format(c.before)}</strong><span class="case-arrow" aria-hidden="true">→</span><strong class="case-after"><span class="case-reading-label">После</span>${caseNumber.format(c.after)}</strong><span class="case-unit">л/100 км</span></div><div class="case-saving"><p class="case-difference"><strong>−${caseNumber.format(difference)}</strong><span>л/100 км</span></p><p class="case-percent"><span>Экономия</span><strong>${caseNumber.format(percent)}%</strong></p></div>${video}</article>`;
+  }).join('\n');
+}
+
+export function renderCases(html){
+  if(!html.includes('<!-- CASE_CARDS -->'))throw new Error('Missing screen 3 card template');
+  return html.replace('<!-- CASE_CARDS -->',renderCaseCards()).replace('<!-- CASE_POSITION -->',`1 из ${cases.length}`);
+}
 
 export async function build({basePath='',siteUrl='',indexable=false,optimizeImages=false,outDir=path.join(project,'dist')}={}){
   if(!/^(?:\/[a-zA-Z0-9_-]+)*\/?$/.test(basePath))throw new Error('Invalid base path');
@@ -31,6 +52,7 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
       relative=relative.replace(/\.png$/i,'.webp');
     }else if(/\.(html|css|js)$/.test(file)){
       let text=contents.toString('utf8');
+      if(relative==='index.html')text=renderCases(text);
       if(optimizeImages)text=text.replace(/(\/assets\/[^'"`\s)<>]+)\.png/g,'$1.webp');
       // Match URL attributes, CSS url(), and root-local JS strings/templates.
       // External URLs, regular expressions, canonical URLs and imports are unchanged.
