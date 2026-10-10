@@ -7,60 +7,53 @@
 .line-icon { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:0 0 44px; color:var(--green); }
 .line-icon svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .about-section { background:white url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; }
-.about-layout { display:grid; grid-template-columns:1.2fr 1fr; gap:28px; align-items:stretch; }
-.about-copy h2 { text-transform:uppercase; font-size:clamp(32px,3.5vw,59px); }
-.about-cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.about-cards article { display:flex; align-items:flex-start; gap:20px; padding:22px 18px; background:rgb(255 255 255 / 94%); border-color:#dce0df; }
-.about-cards .line-icon { border:1px solid #bbc2bf; border-radius:50%; width:72px; height:72px; flex-basis:72px; padding:15px; }
-.about-cards h3 { font-size:clamp(15px,1.2vw,20px); text-transform:uppercase; margin:0 0 9px; }
-.about-cards p { font-size:clamp(14px,1.06vw,18px); line-height:1.3; color:#283043; }
-.about-products { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; }
-.about-products>div { position:relative; min-width:0; height:100%; min-height:480px; overflow:hidden; display:flex; align-items:end; }
-.about-products img { width:190%; max-width:none; height:85%; min-height:450px; object-fit:contain; object-position:center bottom; transform:translateX(-24%); mix-blend-mode:multiply; }
-.about-products .about-label-whites { position:absolute; pointer-events:none; mix-blend-mode:normal; }
-@media(max-width:1000px) { .about-products .about-label-whites { display:none; } }
-.dose-strip { display:flex; align-items:center; gap:32px; padding:20px 30px; margin-top:20px; background:rgb(246 247 246 / 94%); border-radius:14px; }
-.dose-strip .line-icon { width:80px; height:80px; flex-basis:80px; border-radius:50%; border:1px solid #bdc4be; padding:16px; }
-.dose-strip>div { border-left:1px solid #aab3ac; padding-left:30px; }
-.dose-strip strong { display:block; font-size:clamp(24px,3vw,48px); font-weight:900; text-transform:uppercase; line-height:1.15; }
-.dose-strip p { margin:4px 0 0; font-size:clamp(14px,1.25vw,20px); }
-.how-section { padding-bottom:32px; min-height:800px; }
-.how-copy { position:relative; z-index:1; width:41%; }
-.how-copy h2 { text-transform:uppercase; font-size:clamp(43px,4.4vw,73px); }
-.how-copy .section-lead { font-size:clamp(16px,1.32vw,21px); }
-.how-steps { margin:34px 0 28px; padding:0; list-style:none; counter-reset:mechanism; }
-.how-steps li { display:flex; gap:20px; margin-bottom:25px; counter-increment:mechanism; }
-.how-steps li::before { content:counter(mechanism,decimal-leading-zero); font-size:40px; font-weight:800; line-height:1; color:var(--green); width:50px; flex:0 0 50px; }
-.how-steps li>div { padding-left:16px; border-left:1px solid var(--green); }
-.how-steps h3 { margin:0 0 4px; font-size:clamp(15px,1.25vw,20px); text-transform:uppercase; }
-.how-steps p { margin:0; font-size:clamp(14px,1.18vw,18px); line-height:1.3; }
-.how-visual { position:absolute; inset:0; z-index:0; }
-.how-visual>img { width:100%; height:100%; object-fit:fill; object-position:right center; }
-.how-visual::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,white 38%,rgb(255 255 255 / 95%) 41%,transparent 48%); pointer-events:none; }
-.image-label,.piston-label { z-index:1; }
-.image-label { position:absolute; top:22%; width:170px; border-radius:8px; overflow:hidden; background:rgb(255 255 255 / 90%); font-size:14px; line-height:1.3; }
-.image-label strong { display:block; padding:12px 14px; background:#292e31; color:white; text-transform:uppercase; font-size:17px; }
-.image-label p { margin:0; padding:12px 14px; }
-.image-label.normal { left:43%; }
-.image-label.treated { right:7%; }
-.image-label.treated strong { background:#0d6607; }
-.piston-label { position:absolute; top:76%; color:white; border-radius:8px; padding:12px 16px; background:rgb(20 23 20 / 84%); font-weight:700; text-transform:uppercase; font-size:15px; }
-.piston-label.before { left:48%; }.piston-label.after { left:67%; background:rgb(19 97 7 / 88%); }
-.mechanism-chain { position:relative; z-index:1; display:grid; grid-template-columns:repeat(5,1fr); padding:20px 18px; gap:12px; background:rgb(255 255 255 / 96%); border:1px solid var(--green); border-radius:16px; }
-.mechanism-chain>div { position:relative; display:flex; align-items:center; gap:15px; padding-right:22px; border-right:1px solid #c1c8c3; }
-.mechanism-chain>div:last-child { border:0; padding-right:0; }
-.mechanism-chain>div:not(:last-child)::after { content:'→'; position:absolute; right:0; font-size:25px; color:var(--green); background:white; }
-.mechanism-chain strong { font-size:clamp(12px,1.04vw,17px); text-transform:uppercase; line-height:1.2; }
-@media(min-width:1001px) {
- .how-visual { --mechanism-axis:71%; --fuel-label-offset:clamp(170px,15vw,240px); --piston-label-offset:clamp(120px,11vw,190px); }
- .how-visual>img { transform:translateX(7%); }
- .how-visual .image-label { top:11%; width:190px; }
- .how-visual .image-label strong { padding:9px 12px; }
- .how-visual .image-label p { padding:8px 12px; }
- .how-visual .image-label.normal { left:calc(var(--mechanism-axis) - var(--fuel-label-offset)); transform:translateX(-50%); }
- .how-visual .image-label.treated { right:auto; left:calc(var(--mechanism-axis) + var(--fuel-label-offset)); transform:translateX(-50%); }
- .how-visual .piston-label.before { left:calc(var(--mechanism-axis) - var(--piston-label-offset)); transform:translateX(-50%); }
- .how-visual .piston-label.after { left:calc(var(--mechanism-axis) + var(--piston-label-offset)); transform:translateX(-50%); }
+.about-section .about-anchor { position:absolute; top:0; left:0; width:0; height:0; }
+.about-section .about-layout { display:grid; grid-template-columns:1.2fr 1fr; grid-template-areas:'copy products' 'cards mechanism'; gap:20px 28px; align-items:start; }
+.about-section .about-copy { grid-area:copy; }
+.about-section .about-copy h2 { text-transform:uppercase; font-size:clamp(32px,3.5vw,59px); margin-bottom:16px; }
+.about-section .about-copy .section-lead { margin-bottom:0; }
+.about-section .about-cards { grid-area:cards; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.about-section .about-cards article { display:flex; align-items:flex-start; gap:14px; padding:18px 14px; background:rgb(255 255 255 / 94%); border-color:#dce0df; min-width:0; }
+.about-section .about-cards article>div { min-width:0; }
+.about-section .about-cards .line-icon { border:1px solid #bbc2bf; border-radius:50%; width:48px; height:48px; flex-basis:48px; padding:10px; }
+.about-section .about-cards h3 { font-size:clamp(15px,1.2vw,20px); text-transform:uppercase; margin:0 0 7px; overflow-wrap:anywhere; }
+.about-section .about-cards p { font-size:clamp(14px,1.06vw,18px); line-height:1.35; color:#283043; margin:0; }
+.about-section .about-products { grid-area:products; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:end; }
+.about-section .about-products>div { position:relative; min-width:0; height:240px; overflow:hidden; display:flex; align-items:end; }
+.about-section .about-products img { width:190%; max-width:none; height:100%; object-fit:contain; object-position:center bottom; transform:translateX(-24%); mix-blend-mode:multiply; }
+.about-section .about-products .about-label-whites { position:absolute; pointer-events:none; mix-blend-mode:normal; }
+.about-section .about-mechanism { grid-area:mechanism; min-width:0; margin:0; border-radius:14px; overflow:hidden; }
+.about-section .about-mechanism img { display:block; width:100%; height:auto; object-fit:contain; }
+.about-section .dose-strip { display:flex; align-items:center; gap:20px; padding:16px 22px; margin-top:20px; background:rgb(246 247 246 / 94%); border-radius:14px; }
+.about-section .dose-strip .line-icon { width:52px; height:52px; flex-basis:52px; border-radius:50%; border:1px solid #bdc4be; padding:10px; }
+.about-section .dose-strip>div { border-left:1px solid #aab3ac; padding-left:20px; min-width:0; }
+.about-section .dose-strip strong { display:block; font-size:clamp(23px,2.1vw,34px); font-weight:900; text-transform:uppercase; line-height:1.15; }
+.about-section .dose-strip p { margin:4px 0 0; font-size:clamp(14px,1.15vw,18px); }
+@media(max-width:1000px) {
+ .about-section .about-layout { gap:18px; grid-template-columns:1fr 1fr; grid-template-areas:'copy copy' 'products mechanism' 'cards cards'; }
+ .about-section .about-copy h2 { font-size:clamp(30px,4.2vw,42px); letter-spacing:-1px; }
+ .about-section .about-copy .section-lead { font-size:17px; }
+ .about-section .about-products>div { height:210px; }
+ .about-section .about-products .about-label-whites { display:none; }
+ .about-section .about-cards article { padding:14px; gap:12px; }
+ .about-section .about-cards h3 { font-size:17px; }
+ .about-section .about-cards p { font-size:15px; }
+}
+@media(max-width:700px) {
+ .about-section.remaining { padding:28px 5%; }
+ .about-section .about-layout { grid-template-columns:1fr; grid-template-areas:'copy' 'products' 'cards' 'mechanism'; gap:16px; }
+ .about-section .about-copy h2 { font-size:clamp(27px,7.3vw,45px); margin-bottom:12px; }
+ .about-section .about-copy .section-lead { font-size:17px; }
+ .about-section .about-products { width:min(420px,100%); justify-self:center; }
+ .about-section .about-products>div { height:190px; }
+ .about-section .about-cards { grid-template-columns:1fr; gap:10px; }
+ .about-section .about-cards .line-icon { width:40px; height:40px; flex-basis:40px; padding:8px; }
+ .about-section .about-mechanism { width:min(420px,100%); justify-self:center; }
+ .about-section .dose-strip { gap:12px; padding:14px 12px; margin-top:16px; }
+ .about-section .dose-strip .line-icon { width:40px; height:40px; flex-basis:40px; padding:8px; }
+ .about-section .dose-strip>div { padding-left:12px; }
+ .about-section .dose-strip strong { font-size:23px; }
+ .about-section .dose-strip p { font-size:14px; line-height:1.35; }
 }
 .calculator-section { display:grid; grid-template-columns:1.1fr 1fr; gap:5%; background:white url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; }
 .calculator-copy h2 { font-size:clamp(42px,5.4vw,88px); letter-spacing:-3px; }
@@ -169,7 +162,6 @@
 .footer-caption { color:#929792; margin:32px 0 12px; font-size:14px; }.footer-documents { display:flex; gap:100px; font-size:14px; line-height:1.5; margin-bottom:38px; }.footer-documents>div { display:flex; flex-direction:column; gap:10px; }.footer-documents a { text-decoration:underline; }
 .footer-bottom { border-top:1px solid #555955; padding-top:30px; display:flex; justify-content:space-between; gap:50px; color:#a5aaa5; font-size:13px; }.site-footer p { color:inherit; font-size:13px; margin-bottom:9px; }.footer-legal { display:flex; flex-direction:column; gap:9px; text-align:right; white-space:nowrap; text-decoration:underline; }
 @media(max-width:1300px) {
- .about-cards article { gap:12px; padding:18px 14px; }.about-cards .line-icon { width:55px; height:55px; flex-basis:55px; padding:11px; }
  .calculator-panel { padding:23px; }#calculator-form>label,#calculator-form legend { font-size:14px; }#calculator-form .scenarios { gap:8px; }#calculator-form .scenarios label { font-size:14px; }
  .technology-cards { width:88%; }.technology-cards article { gap:12px; padding:16px; }.technology-cards .line-icon { width:42px; height:42px; flex-basis:42px; padding:8px; }.document-grid { width:92%; }.document-card h3 { font-size:16px; }
  .product { padding:12px; }.product-photo { height:285px; }.product-photo img { height:calc(var(--photo-height) * .85); }.product h3,.product .product-price { font-size:24px; }.product .fuel-capacity { font-size:14px; }.product button { font-size:16px; }
@@ -177,9 +169,6 @@
 }
 @media(max-width:1000px) {
  .remaining { padding:40px 5%; }.remaining h2 { letter-spacing:-1.5px; }.section-lead { font-size:18px; }
- .about-layout { grid-template-columns:1fr; }.about-copy h2 { font-size:clamp(30px,5.5vw,54px); }.about-products { width:min(680px,100%); margin:auto; }.about-products>div { height:400px; min-height:0; }.about-products img { height:100%; min-height:0; }.about-cards h3 { font-size:18px; }.about-cards p { font-size:16px; }
- .how-copy { width:100%; }.how-copy h2 { font-size:clamp(45px,7vw,70px); }.how-copy .section-lead { max-width:650px; font-size:18px; }.how-steps { display:grid; grid-template-columns:1fr 1fr; gap:24px; }.how-steps li { margin:0; gap:15px; }.how-steps li::before { width:40px; flex-basis:40px; font-size:32px; }.how-steps h3 { font-size:16px; }.how-steps p { font-size:15px; }
- .how-visual { position:relative; inset:auto; aspect-ratio:1.5; overflow:hidden; margin:25px -5.55%; }.how-visual::after { display:none; }.how-visual>img { width:100%; height:100%; object-fit:cover; object-position:right; }.image-label.normal { left:39%; }.image-label.treated { right:4%; }.image-label { top:18%; width:145px; font-size:12px; }.image-label strong { font-size:14px; }.piston-label { top:76%; font-size:12px; }.mechanism-chain { grid-template-columns:repeat(3,1fr); }.mechanism-chain>div:nth-child(3) { border:0; }.mechanism-chain>div:nth-child(3)::after { display:none; }.mechanism-chain strong { font-size:13px; }
  .calculator-section { grid-template-columns:1fr; gap:30px; }.calculator-copy h2 { font-size:clamp(50px,8vw,76px); }.calculator-copy .section-lead { max-width:650px; }.calculator-panel { max-width:720px; width:100%; margin:auto; padding:30px; }.calculator-panel>h3 { font-size:38px; }.example-cards { max-width:650px; }.example-cards strong { font-size:19px; }.example-cards b { font-size:29px; }#calculator-form>label,#calculator-form legend { font-size:17px; }#calculator-form .scenarios label { font-size:16px; }.net-savings .money { font-size:58px; }
  .technology-section { background-size:auto 100%; background-position:right; }.technology-cards { width:100%; }.technology-cards article { flex-direction:column; }.document-grid { grid-template-columns:1fr 1fr; width:100%; }.document-preview { height:300px; }.documents-bottom>.section-lead { font-size:18px; }
  .product-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }.product-photo { height:300px; }.product-photo img { height:var(--photo-height); max-height:300px; }.product h3,.product .product-price { font-size:26px; }
@@ -189,8 +178,6 @@
 }
 @media(max-width:700px) {
  .remaining { padding:32px 5%; }.remaining .eyebrow { font-size:9px; letter-spacing:2px; margin-bottom:20px; }.remaining h2 { font-size:clamp(32px,8.5vw,48px); }.section-lead { font-size:17px; }
- .about-copy h2 { font-size:clamp(27px,7.3vw,45px); letter-spacing:-1px; }.about-cards { grid-template-columns:1fr; gap:10px; }.about-cards article { padding:18px; gap:18px; }.about-cards h3 { font-size:17px; }.about-cards p { font-size:15px; }.about-products>div { height:270px; }.dose-strip { gap:15px; padding:18px 14px; }.dose-strip .line-icon { width:45px; height:45px; flex-basis:45px; padding:8px; }.dose-strip>div { padding-left:15px; }.dose-strip strong { font-size:23px; }.dose-strip p { font-size:13px; }
- .how-copy h2 { font-size:47px; }.how-copy .section-lead { font-size:17px; }.how-steps { grid-template-columns:1fr; gap:22px; }.how-steps h3 { font-size:16px; }.how-steps p { font-size:15px; }.how-visual { aspect-ratio:1; }.how-visual>img { width:165%; max-width:none; margin-left:-55.6%; }.image-label { top:2%; width:36%; font-size:11px; }.image-label strong { font-size:12px; padding:9px; }.image-label p { padding:9px; }.image-label.normal { left:1%; }.image-label.treated { right:1%; }.piston-label { top:79%; font-size:11px; padding:8px; width:32%; text-align:center; }.piston-label.before { left:8%; }.piston-label.after { left:60%; }.mechanism-chain { grid-template-columns:1fr; gap:16px; padding:18px; }.mechanism-chain>div { border:0; padding-right:0; gap:18px; }.mechanism-chain>div:not(:last-child)::after { content:'↓'; right:7px; background:none; }.mechanism-chain strong { font-size:15px; }
  .calculator-copy h2 { font-size:clamp(30px,10.3vw,70px); letter-spacing:-2px; white-space:nowrap; }.calculation-dose strong { font-size:32px; }.calculation-dose>span { font-size:13px; }.example-cards { gap:7px; }.example-cards>div { padding:12px 5px; }.example-cards img { width:45px; height:30px; }.example-cards strong { font-size:13px; display:block; }.example-cards b { font-size:20px; }.calculator-panel { padding:20px 16px; border-radius:12px; }.calculator-panel>h3 { font-size:30px; }.fuel-switch { gap:6px; }.fuel-switch button { font-size:15px; padding:9px 4px; }#calculator-form>label { font-size:14px; gap:12px; }#calculator-form input[type=number] { width:42%; padding:10px; font-size:18px; }#calculator-form fieldset { flex-direction:column; align-items:start; gap:12px; }#calculator-form legend { float:none; margin-bottom:10px; font-size:14px; }#calculator-form .scenarios { gap:22px; }.net-savings .money { font-size:46px; }.net-savings .period { font-size:13px; margin-left:6px; }.net-savings .year-savings { font-size:17px; }.net-breakdown { font-size:14px; }.calc-metrics>div { padding:0 7px; }.calc-metrics strong { font-size:19px; }.calc-metrics span { font-size:10px; }.calc-extra { font-size:13px; }.consultation-button { font-size:16px; gap:15px; }.small-note { font-size:11px; }
  .technology-top { margin-bottom:34px; }.technology-cards { grid-template-columns:1fr; gap:10px; margin-top:24px; }.technology-cards article { flex-direction:row; padding:18px; }.technology-cards h3 { font-size:15px; }.technology-cards p { font-size:14px; }.document-grid { grid-template-columns:1fr; max-width:440px; margin:auto; }.document-card { padding:18px; }.document-card h3 { font-size:20px; }.document-preview { height:330px; }.document-card>p { min-height:0; }.document-actions a,.instruction-card button { font-size:15px; padding:11px; }
  .catalog-section h2 { font-size:clamp(40px,10vw,60px); margin:24px 0; }.product-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.product { padding:12px 9px; }.product-photo { height:230px; }.product-photo img { height:calc(var(--photo-height) * .7); max-height:230px; }.product h3 { font-size:24px; }.product .product-price { font-size:23px; margin:0 4px 10px; }.product .fuel-capacity { font-size:12px; }.product button { font-size:15px; }.product:last-child { grid-column:1/-1; max-width:300px; width:100%; justify-self:center; }
@@ -199,13 +186,12 @@
  .site-footer { padding:36px 5%; }.footer-logo,.footer-logo img { width:142px; flex-basis:142px; }.footer-contacts>a { font-size:16px; }.footer-top { gap:20px; }.site-footer nav { font-size:11px; gap:14px 20px; }.footer-documents { flex-direction:column; gap:10px; font-size:13px; margin-bottom:28px; }.footer-caption { margin-top:28px; }.footer-bottom { flex-direction:column; gap:20px; padding-top:24px; }.footer-legal { text-align:left; gap:12px; }.site-footer p { font-size:12px; }
 }
 @media(max-width:360px) {
- .remaining .eyebrow { font-size:8px; letter-spacing:1.3px; }.about-copy h2 { font-size:25px; }.about-cards article { gap:12px; padding:15px; }.about-cards h3 { font-size:15px; }.about-cards p { font-size:14px; }.about-products>div { height:230px; }.dose-strip { gap:10px; padding:14px 10px; }.dose-strip>div { padding-left:10px; }.dose-strip strong { font-size:20px; }
+ .remaining .eyebrow { font-size:8px; letter-spacing:1.3px; }
  .calculator-panel { padding:18px 12px; }.calculator-panel>h3 { font-size:27px; }.example-cards b { font-size:17px; }.net-savings .money { font-size:40px; }.calc-metrics strong { font-size:17px; }.calculation-dose strong { font-size:28px; }
  .product-grid { grid-template-columns:1fr; }.product,.product:last-child { width:100%; max-width:320px; justify-self:center; grid-column:auto; }.product-photo { height:280px; }.product-photo img { height:var(--photo-height); max-height:280px; }.product .fuel-capacity { font-size:15px; }.product .product-price { font-size:27px; }
  .dealer-details>div { flex-direction:column; gap:3px; }.dealer-details dd { padding-left:31px; }.dealer-messengers { gap:8px; }.dealer-messengers>a { padding:10px 8px; font-size:14px; gap:7px; }.footer-top { flex-direction:column; }.footer-contacts { margin-left:0; }.footer-contacts>div { justify-content:start; margin-top:12px; }
 }
 @media (max-width:760px) {
- .mechanism-chain>div:not(:last-child) { padding-right:22px; }
  .technology-section { background-image:linear-gradient(rgb(255 255 255 / 76%),rgb(255 255 255 / 76%)),url('/assets/backgrounds/laboratory-v1.png'); }
 }
 

@@ -26,7 +26,7 @@ try{
     await page.setViewportSize({width,height:900});
     await page.goto(url,{waitUntil:'load'});
     await page.locator('#products .product').first().waitFor();
-    assert.equal(await page.locator('[data-screen]').count(),11);
+    assert.equal(await page.locator('[data-screen]').count(),10);
     assert.equal(await page.locator('.faq-category').count(),4);
     assert.equal(await page.locator('.faq-item').count(),30);
     for(const section of await page.locator('[data-screen]').all()){
