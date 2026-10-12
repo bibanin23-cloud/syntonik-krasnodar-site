@@ -20,33 +20,33 @@
 #hero h1 em, #hero .hero-distance { white-space: nowrap; }
 #hero .hero-distance { font-weight: inherit; }
 #hero .lead { max-width: 100%; font-size: clamp(13px, 1.05vw, 18px); line-height: 1.45; margin-bottom: 20px; }
-#hero .hero-sample { font-size: 16px; line-height: 1.45; }
+#hero .hero-sample { display: flex; align-items: center; gap: 10px; font-size: 16px; line-height: 1.45; }
 #hero .hero-sample p { margin: 0; }
 #hero .hero-sample p:first-child { font-weight: 600; }
 #hero .hero-sample p + p { margin-top: 4px; font-size: 14px; color: #56625a; }
 #hero .hero-usage {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
+  flex-direction: column;
+  gap: 8px;
   margin: 18px 0 0;
   padding: 0;
   list-style: none;
   font-size: 14px;
   line-height: 1.45;
 }
-#hero .hero-usage li { display: flex; align-items: center; gap: 7px; }
-#hero .hero-usage li::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  flex: 0 0 5px;
-  border-radius: 50%;
-  background: var(--green);
+#hero .hero-usage li { display: flex; align-items: center; gap: 10px; }
+#hero .hero-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: var(--green);
 }
+#hero .hero-sample-icon { width: 28px; height: 28px; }
+#hero .hero-scroll { align-self: flex-start; margin: auto 0 6px calc(22% - 10px); }
 #hero .hero-example {
   max-width: none;
   width: 100%;
-  margin: auto 0 0;
+  margin: 0;
   font-size: 12px;
   line-height: 1.45;
   color: #596269;
@@ -78,6 +78,7 @@
     object-position: center;
   }
   #hero .hero-example { margin-top: 16px; }
+  #hero .hero-scroll { align-self: center; margin: 10px 0 0; }
   #hero .hero-scene::after { background: linear-gradient(0deg, white, transparent 12%, transparent 92%, white); }
 }
 
@@ -87,6 +88,7 @@
   #hero .lead { font-size: 16px; margin-bottom: 16px; }
   #hero .hero-sample { font-size: 14px; }
   #hero .hero-usage { flex-direction: column; gap: 6px; margin-top: 14px; }
+  #hero .hero-scroll { display: none; }
 }
 
 @media (max-width: 380px) {
