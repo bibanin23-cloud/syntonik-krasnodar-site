@@ -24,6 +24,25 @@
 #hero .hero-sample p { margin: 0; }
 #hero .hero-sample p:first-child { font-weight: 600; }
 #hero .hero-sample p + p { margin-top: 4px; font-size: 14px; color: #56625a; }
+#hero .hero-usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.45;
+}
+#hero .hero-usage li { display: flex; align-items: center; gap: 7px; }
+#hero .hero-usage li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--green);
+}
 #hero .hero-example {
   max-width: none;
   width: 100%;
@@ -67,6 +86,7 @@
   #hero h1 > span:last-child { font-size: clamp(20px, 6.3vw, 46px); white-space: nowrap; }
   #hero .lead { font-size: 16px; margin-bottom: 16px; }
   #hero .hero-sample { font-size: 14px; }
+  #hero .hero-usage { flex-direction: column; gap: 6px; margin-top: 14px; }
 }
 
 @media (max-width: 380px) {
