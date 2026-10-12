@@ -1,5 +1,6 @@
 /* Screen 3: approved case figures with separately prepared vehicle images. */
 .cases-section { position: relative; isolation: isolate; padding: 0; overflow: hidden; background: #fff; }
+#cases::before { content: ''; position: absolute; inset: -12px; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 42%) 45%, rgb(255 255 255 / 66%)), url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; filter: blur(4px) saturate(.25); }
 .cases-shell { width: min(1320px, 80%); margin: auto; padding: 28px 0 20px; }
 .cases-intro { width: 100%; margin-bottom: 20px; }
 .cases-section .eyebrow { margin-bottom: 15px; color: #989d9b; font-size: 9px; line-height: 1.4; letter-spacing: 2px; }
