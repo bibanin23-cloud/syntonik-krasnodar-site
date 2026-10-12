@@ -16,9 +16,9 @@ const homepage=await readFile(path.join(root,'index.html'),'utf8');
 const ids=[...homepage.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 const duplicates=ids.filter((id,index)=>ids.indexOf(id)!==index);
 const brokenAnchors=[...homepage.matchAll(/href="#([^"]+)"/g)].map(m=>m[1]).filter(id=>!ids.includes(id));
-const screens=[...homepage.matchAll(/data-screen="(\d+)"/g)].map(m=>Number(m[1]));
+const screens=[...homepage.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]);
 const faqValid=faq.length===30&&faq.every((item,index)=>item.id===index+1&&item.question&&item.answer.length&&item.answer.every(p=>typeof p==='string'&&p.trim()));
-if(duplicates.length||brokenAnchors.length||screens.join(',')!=='1,2,3,4,6,7,8,9,10,11'||!faqValid){console.error(JSON.stringify({duplicates,brokenAnchors,screens,faqValid}));process.exitCode=1;}else console.log('10 ordered screens (about/how merged), unique anchors, 20 product photos and 30 FAQ entries verified.');
+if(duplicates.length||brokenAnchors.length||screens.join(',')!=='1,2,3,4,6,7,8,test-drive,9,10,11'||!faqValid){console.error(JSON.stringify({duplicates,brokenAnchors,screens,faqValid}));process.exitCode=1;}else console.log('11 ordered screens (TEST DRIVE after catalog), unique anchors, 20 catalog product photos and 30 FAQ entries verified.');
 if(process.argv.includes('--hashes')){
  const hashes={};
  for(const p of files.filter(p=>/\.(png|pdf)$/.test(p))){const bytes=await readFile(p);hashes[path.relative(root,p).replaceAll('\\','/')]=createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');}

@@ -155,25 +155,48 @@ caseVideoDialog.addEventListener('close',()=>{
   caseVideoPlayer.replaceChildren();
   if(caseVideoOpener?.isConnected)caseVideoOpener.focus({preventScroll:true});
 });
+const testDriveTerms=document.querySelector('#test-drive-terms');
+const testDriveTermsTrigger=document.querySelector('#open-test-drive-terms');
+testDriveTermsTrigger.addEventListener('click',()=>testDriveTerms.showModal());
+document.querySelector('#close-test-drive-terms').addEventListener('click',()=>testDriveTerms.close());
+testDriveTerms.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const controls=[...testDriveTerms.querySelectorAll('button,a[href],input,select,textarea,[tabindex="0"]')].filter(element=>!element.disabled&&!element.hidden);
+  const first=controls[0],last=controls.at(-1);
+  if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){
+    event.preventDefault();(event.shiftKey?last:first).focus();
+  }
+});
+testDriveTerms.addEventListener('click',event=>{
+  if(event.target!==testDriveTerms)return;
+  const bounds=testDriveTerms.getBoundingClientRect();
+  if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)testDriveTerms.close();
+});
+testDriveTerms.addEventListener('close',()=>testDriveTermsTrigger.focus({preventScroll:true}));
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
+const testDriveProduct={ml:15,label:'15 мл',price:690,name:'Syntonik TEST DRIVE'};
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
 document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);
 let sendingLead=false;
 let formOpener;
 leadForm.elements.fuel.innerHTML=fuels.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
 leadForm.elements.volume.innerHTML=volumes.map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
-function openForm(kind,fuel,volume){
+function openForm(kind,fuel,volume,testDrive=false){
   if(sendingLead)return;
   formOpener=document.activeElement;
   leadForm.reset();leadForm.dataset.kind=kind;
   const order=kind==='order';
-  document.querySelector('#dialog-title').textContent=order?'Заказать Syntonik':'Обратный звонок';
+  const trial=order&&testDrive;
+  leadForm.dataset.testDrive=String(trial);
+  document.querySelector('#dialog-title').textContent=order?(trial?'Заказать Syntonik TEST DRIVE':'Заказать Syntonik'):'Обратный звонок';
+  document.querySelector('#test-drive-order-summary').hidden=!trial;
+  leadForm.elements.volume.innerHTML=(trial?[testDriveProduct]:volumes).map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
   try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'form_open_order':'form_open_callback');}catch{}
   document.querySelector('#order-fields').hidden=!order;
   document.querySelector('#terms-label').hidden=!order;
   leadForm.elements.terms.required=order;
   leadForm.elements.fuel.disabled=!order;leadForm.elements.volume.disabled=!order;
-  leadForm.elements.fuel.value=fuel||selectedFuel.id;leadForm.elements.volume.value=volume||'250';
+  leadForm.elements.fuel.value=fuel||selectedFuel.id;leadForm.elements.volume.value=trial?'15':volume||'250';
   for(const field of ['name','phone','city'])leadForm.elements[field].setCustomValidity('');
   document.querySelector('#form-status').textContent='';dialog.showModal();
 }
@@ -182,7 +205,7 @@ document.addEventListener('click',event=>{
   if(fuelButton){selectedFuel=fuels.find(f=>f.id===fuelButton.dataset.fuel);renderCatalog();document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus();}
   const calcFuelButton=event.target.closest('[data-calc-fuel]');
   if(calcFuelButton){calculatorFuel=fuels.find(f=>f.id===calcFuelButton.dataset.calcFuel);renderCalculatorTabs();document.querySelector(`[data-calc-fuel="${calculatorFuel.id}"]`).focus();}
-  const order=event.target.closest('[data-order]');if(order)openForm('order',order.dataset.fuel,order.dataset.volume);
+  const order=event.target.closest('[data-order]');if(order)openForm('order',order.dataset.fuel,order.dataset.volume,order.hasAttribute('data-test-drive'));
   if(event.target.closest('[data-callback]'))openForm('callback');
 });
 document.querySelector('#close-dialog').addEventListener('click',()=>dialog.close());
@@ -200,15 +223,17 @@ leadForm.addEventListener('submit',async event=>{
   if(!leadForm.reportValidity())return;
   const status=document.querySelector('#form-status'),button=leadForm.querySelector('[type="submit"]');
   const fields=new FormData(leadForm),order=leadForm.dataset.kind==='order';
+  const trial=order&&leadForm.dataset.testDrive==='true';
+  const orderProduct=order?(trial?[testDriveProduct]:volumes).find(v=>String(v.ml)===fields.get('volume')):null;
   sendingLead=true;button.disabled=true;leadForm.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
   try{
-    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:[fields.get('comment')||'',order?`Цена упаковки: ${money(volumes.find(v=>String(v.ml)===fields.get('volume')).price)}`:''].filter(Boolean).join('\n'),
+    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:[fields.get('comment')||'',trial?`Товар: ${testDriveProduct.name}`:'',order?`Цена упаковки: ${money(orderProduct.price)}`:''].filter(Boolean).join('\n'),
       form:leadForm.dataset.kind,page:window.location.href,...sessionUtms,
       consent:fields.get('consent')==='on',terms:fields.get('terms')==='on',
       fuel:order?fuels.find(f=>f.id===fields.get('fuel'))?.name||'':'',
-      volume:order?volumes.find(v=>String(v.ml)===fields.get('volume'))?.label||'':''});
+      volume:order?orderProduct?.label||'':''});
     leadForm.reset();status.textContent='Спасибо! Заявка отправлена.';
-    try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'lead_order_success':'lead_callback_success',{city:fields.get('city')||'',fuel:order?(fuels.find(f=>f.id===fields.get('fuel'))?.name||''):'',volume:order?(volumes.find(v=>String(v.ml)===fields.get('volume'))?.label||''):''});}catch{}
+    try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'lead_order_success':'lead_callback_success',{city:fields.get('city')||'',fuel:order?(fuels.find(f=>f.id===fields.get('fuel'))?.name||''):'',volume:order?(orderProduct?.label||''):''});}catch{}
   }catch{status.textContent='Не удалось отправить заявку. Попробуйте ещё раз.';}
   finally{sendingLead=false;button.disabled=false;leadForm.removeAttribute('aria-busy');}
 });

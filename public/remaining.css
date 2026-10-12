@@ -334,3 +334,61 @@
  .catalog-section #catalog-position { min-width:58px; text-align:center; font-size:14px; color:#56625a; }
  .catalog-section .catalog-delivery { font-size:13px; margin-top:8px; }
 }
+
+/* TEST DRIVE: a separate offer between the catalog and FAQ. */
+.test-drive-section { background:linear-gradient(110deg,#f4f5f4,#fff 60%,#e7e9e8); padding-top:36px; padding-bottom:30px; }
+.test-drive-section .test-drive-layout { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); grid-template-areas:'intro visual' 'offer visual'; gap:18px 32px; align-items:center; max-width:1440px; margin:auto; }
+.test-drive-section .test-drive-intro { grid-area:intro; min-width:0; }
+.test-drive-section .eyebrow { margin:0 0 10px; letter-spacing:2px; }
+.test-drive-section h2 { font-size:clamp(28px,3.2vw,48px); line-height:1.05; letter-spacing:-1px; margin:0 0 12px; }
+.test-drive-section .section-lead { font-size:18px; line-height:1.45; margin:0; max-width:620px; }
+.test-drive-section .test-drive-visual { grid-area:visual; margin:0; min-width:0; display:grid; place-items:center; }
+.test-drive-section .test-drive-visual img { display:block; width:100%; max-height:460px; object-fit:contain; }
+.test-drive-section .test-drive-offer { grid-area:offer; min-width:0; }
+.test-drive-section .test-drive-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0 0 12px; }
+.test-drive-section .test-drive-facts>div { display:flex; flex-direction:column; justify-content:end; min-width:0; }
+.test-drive-section .test-drive-facts>div+div { border-left:1px solid #d9ded9; padding-left:14px; }
+.test-drive-section .test-drive-facts dt { order:1; font-size:14px; line-height:1.35; margin-top:4px; color:#56625a; }
+.test-drive-section .test-drive-facts dd { font-size:32px; font-weight:700; line-height:1.1; white-space:nowrap; margin:0; }
+.test-drive-section .test-drive-facts>div:first-child dd { font-size:46px; color:var(--green); }
+.test-drive-section .test-drive-limited { font-size:14px; margin:0 0 18px; color:#56625a; }
+.test-drive-section .test-drive-guarantee { display:grid; grid-template-columns:26px minmax(0,1fr); gap:12px; border-top:1px solid #d9ded9; padding-top:16px; margin-bottom:18px; }
+.test-drive-section .test-drive-guarantee svg { width:26px; height:28px; fill:none; stroke:var(--green); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.test-drive-section .test-drive-guarantee h3 { font-size:20px; margin:0 0 6px; }
+.test-drive-section .test-drive-guarantee p { font-size:16px; line-height:1.45; margin:0; max-width:610px; }
+.test-drive-section .test-drive-cta { width:100%; max-width:400px; min-height:48px; padding:12px 20px; font-size:18px; }
+.test-drive-section .test-drive-delivery { font-size:13px; line-height:1.4; color:#56625a; margin:8px 0 0; }
+.test-drive-section .test-drive-terms-trigger { min-height:44px; padding:8px 0; border:0; background:transparent; font-size:14px; color:var(--green); text-decoration:underline; text-underline-offset:3px; }
+#test-drive-terms { width:min(720px,calc(100vw - 24px)); padding:24px; }
+#test-drive-terms .dialog-head { gap:12px; }
+#test-drive-terms h2 { font-size:26px; line-height:1.2; letter-spacing:-.5px; text-transform:none; margin:0 0 18px; }
+#test-drive-terms .dialog-head button { flex:0 0 44px; width:44px; min-height:44px; padding:0; }
+#test-drive-terms ol { margin:0 0 18px; padding-left:24px; }
+#test-drive-terms li { margin-bottom:10px; font-size:16px; line-height:1.5; }
+#test-drive-terms>p { font-size:14px; line-height:1.45; margin:0; color:#56625a; }
+#lead-dialog #test-drive-order-summary { font-size:16px; font-weight:600; margin:0 0 16px; }
+@media(max-width:900px) {
+ .test-drive-section .test-drive-layout { grid-template-columns:1fr; grid-template-areas:'intro' 'visual' 'offer'; }
+ .test-drive-section .test-drive-visual img { width:auto; max-width:100%; height:230px; }
+}
+@media(max-width:760px) {
+ .test-drive-section { padding:28px 5% 22px; }
+ .test-drive-section .test-drive-layout { grid-template-columns:1fr; grid-template-areas:'intro' 'visual' 'offer'; gap:14px; }
+ .test-drive-section .eyebrow { font-size:10px; margin-bottom:8px; }
+ .test-drive-section h2 { font-size:clamp(28px,7vw,40px); margin-bottom:10px; }
+ .test-drive-section .section-lead { font-size:16px; }
+ .test-drive-section .test-drive-visual img { width:auto; max-width:100%; height:190px; }
+ .test-drive-section .test-drive-facts { gap:8px; margin-bottom:10px; }
+ .test-drive-section .test-drive-facts>div+div { padding-left:8px; }
+ .test-drive-section .test-drive-facts dt { font-size:12px; min-height:2.7em; }
+ .test-drive-section .test-drive-facts dd { font-size:clamp(21px,6vw,24px); }
+ .test-drive-section .test-drive-facts>div:first-child dd { font-size:34px; }
+ .test-drive-section .test-drive-limited { font-size:13px; margin-bottom:14px; }
+ .test-drive-section .test-drive-guarantee { padding-top:14px; gap:10px; margin-bottom:16px; }
+ .test-drive-section .test-drive-guarantee h3 { font-size:18px; }
+ .test-drive-section .test-drive-guarantee p { font-size:15px; }
+ .test-drive-section .test-drive-delivery { font-size:12px; }
+ #test-drive-terms { padding:20px 16px; }
+ #test-drive-terms h2 { font-size:22px; }
+ #test-drive-terms li { font-size:15px; }
+}

@@ -165,3 +165,23 @@ test('existing form preserves entered data on failure and passes selected order 
   await h.submit();assert.equal(h.form.elements.name.value,'Тест');assert.equal(h.button.disabled,false);assert.equal(h.status.textContent,'Не удалось отправить заявку. Попробуйте ещё раз.');
   assert.equal(payload.fuel,'Бензин');assert.equal(payload.volume,'250 мл');assert.equal(payload.comment,'Цена упаковки: 7100');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
 });
+
+test('TEST DRIVE uses the existing order route and preserves the 12-column Sheets and Telegram contract',async()=>{
+  const backend=scriptHarness({config:{MAX_ENABLED:'false'}});
+  let payload,receipt;
+  const send=createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(url,options)=>{
+    payload=JSON.parse(options.body);receipt=backend.post(payload);
+    return {ok:true,json:async()=>receipt};
+  }});
+  const form=formHarness(send);
+  form.form.dataset.kind='order';form.form.dataset.testDrive='true';form.form.elements.volume.value='15';
+  await form.submit();
+  assert.equal(payload.form,'order');assert.equal(payload.volume,'15 мл');assert.equal(payload.fuel,'Бензин');
+  assert.equal(payload.comment,'Товар: Syntonik TEST DRIVE\nЦена упаковки: 690');
+  assert.equal(payload.utm_source,'test');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
+  assert.equal(receipt.success,true);assert.equal(receipt.notifications.telegram,'sent');assert.equal(receipt.notifications.max,'disabled');
+  assert.equal(backend.rows.length,2);assert.equal(backend.rows[1].length,12);assert.ok(backend.rows[1][3].includes(payload.comment));assert.ok(backend.rows[1][3].includes('Объём: 15 мл'));
+  assert.equal(backend.calls.length,1);assert.match(backend.calls[0].url,/api.telegram.org/);
+  assert.ok(JSON.parse(backend.calls[0].options.payload).text.includes('Syntonik TEST DRIVE'));
+  assert.equal(form.status.textContent,'Спасибо! Заявка отправлена.');
+});
