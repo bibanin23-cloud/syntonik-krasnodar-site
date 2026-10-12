@@ -15,7 +15,7 @@ test('preview build resolves repository paths without changing approved content'
     assert.match(html,/rel="canonical" href="https:\/\/syntonik-krasnodar\.ru\/"/);
     assert.match(app,/\/syntonik-krasnodar-site\/assets\/products\/catalog-clean\/\$\{selectedFuel.id\}/);
     assert.match(html,/<section id="catalog"[\s\S]*?<\/section>\s*<section id="test-drive"[\s\S]*?<\/section>\s*<section id="faq"/);
-    assert.match(html,/src="\/syntonik-krasnodar-site\/assets\/products\/test-drive-reference\.webp"/);
+    assert.match(html,/src="\/syntonik-krasnodar-site\/assets\/products\/test-drive-transparent\.webp"/);
     assert.match(await readFile(outDir+'data/cases.js','utf8'),/\^\\\//); // Rutube validation regex is not a path.
     assert.deepEqual([...html.matchAll(/data-screen="(\d+)"/g)].map(m=>+m[1]),[1,2,3,4,6,7,8,9,10,11]);
     assert.doesNotMatch(html,/<section id="how"|how-title|how-steps|mechanism-chain/);

@@ -336,7 +336,7 @@
 }
 
 /* TEST DRIVE: a separate offer between the catalog and FAQ. */
-.test-drive-section { background:linear-gradient(110deg,#f4f5f4,#fff 60%,#e7e9e8); padding-top:36px; padding-bottom:30px; }
+.test-drive-section { background:linear-gradient(110deg,rgb(255 255 255 / 92%),rgb(255 255 255 / 70%) 55%,rgb(255 255 255 / 38%)),url('/assets/backgrounds/industrial-v1.png') center/cover no-repeat; padding-top:36px; padding-bottom:30px; }
 .test-drive-section .test-drive-layout { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); grid-template-areas:'intro visual' 'offer visual'; gap:18px 32px; align-items:center; max-width:1440px; margin:auto; }
 .test-drive-section .test-drive-intro { grid-area:intro; min-width:0; }
 .test-drive-section .eyebrow { margin:0 0 10px; letter-spacing:2px; }
