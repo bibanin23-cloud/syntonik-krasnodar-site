@@ -91,6 +91,17 @@ test('one lead saves the required 12 columns and reaches both independent APIs',
   assert.equal(h.calls.length,2);assert.match(h.calls[1].url,/^https:\/\/platform-api2\.max\.ru\/messages\?chat_id=456/);
   assert.equal(h.calls[1].options.headers.Authorization,'fake-max-token');
 });
+test('catalog order price reaches Sheets and Telegram while MAX is disabled',async()=>{
+  const {fuels,volumes}=await import('../public/data/catalog.js');
+  for(const fuel of fuels)for(const volume of volumes){
+    const comment='Цена упаковки: '+new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(volume.price);
+    const h=scriptHarness({config:{MAX_ENABLED:'false'}}),receipt=h.post({form:'order',terms:true,fuel:fuel.name,volume:volume.label,comment,utm_source:'catalog'});
+    assert.equal(receipt.success,true);assert.equal(receipt.notifications.telegram,'sent');assert.equal(receipt.notifications.max,'disabled');
+    assert.equal(h.rows.length,2);assert.ok(h.rows[1][3].includes(comment));assert.ok(h.rows[1][3].includes('Топливо: '+fuel.name));assert.ok(h.rows[1][3].includes('Объём: '+volume.label));assert.equal(h.rows[1][6],'catalog');
+    assert.equal(h.calls.length,1);assert.match(h.calls[0].url,/api.telegram.org/);assert.ok(JSON.parse(h.calls[0].options.payload).text.includes(comment));
+  }
+});
+
 test('retry with the same request ID never adds a row or sends duplicate notifications',()=>{
   const h=scriptHarness();h.post();const duplicate=h.post();
   assert.equal(duplicate.success,true);assert.equal(duplicate.duplicate,true);assert.equal(h.rows.length,2);assert.equal(h.calls.length,2);
@@ -152,5 +163,5 @@ test('existing form blocks double clicks, shows sending, resets on success and u
 test('existing form preserves entered data on failure and passes selected order fields',async()=>{
   let payload;const h=formHarness(data=>{payload=data;throw Error('network');});h.form.dataset.kind='order';
   await h.submit();assert.equal(h.form.elements.name.value,'Тест');assert.equal(h.button.disabled,false);assert.equal(h.status.textContent,'Не удалось отправить заявку. Попробуйте ещё раз.');
-  assert.equal(payload.fuel,'Бензин');assert.equal(payload.volume,'250 мл');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
+  assert.equal(payload.fuel,'Бензин');assert.equal(payload.volume,'250 мл');assert.equal(payload.comment,'Цена упаковки: 7100');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
 });

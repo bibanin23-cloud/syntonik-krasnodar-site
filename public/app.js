@@ -28,9 +28,50 @@ let selectedFuel=fuels[0];
 let calculatorFuel=fuels[0];
 function renderCalculatorTabs(){document.querySelector('#calculator-tabs').innerHTML=fuels.map(f=>`<button type="button" data-calc-fuel="${f.id}" aria-pressed="${calculatorFuel.id===f.id}">${f.name}</button>`).join('');}
 renderCalculatorTabs();
+const productGrid=document.querySelector('#products');
+const catalogControls=document.querySelector('.catalog-controls');
+const catalogPrevious=document.querySelector('#catalog-prev');
+const catalogNext=document.querySelector('#catalog-next');
+const catalogPosition=document.querySelector('#catalog-position');
+const mobileCatalog=matchMedia('(max-width:700px)');
+let activeProduct=0,productScrollFrame=0,productGridWidth=0;
+function updateCatalogControls(){
+  catalogControls.hidden=!mobileCatalog.matches;
+  const label=`${activeProduct+1} из ${volumes.length}`;
+  if(catalogPosition.textContent!==label)catalogPosition.textContent=label;
+  catalogPrevious.disabled=activeProduct===0;
+  catalogNext.disabled=activeProduct===volumes.length-1;
+}
+function scrollToProduct(index,smooth=false){
+  const card=productGrid.children[index];if(!card)return;
+  const left=card.getBoundingClientRect().left-productGrid.getBoundingClientRect().left+productGrid.scrollLeft;
+  productGrid.scrollTo({left,behavior:smooth&&!matchMedia('(prefers-reduced-motion:reduce)').matches?'smooth':'instant'});
+}
+function syncScrolledProduct(){
+  productScrollFrame=0;if(!mobileCatalog.matches)return;
+  const cards=[...productGrid.children],left=productGrid.getBoundingClientRect().left;
+  activeProduct=cards.reduce((closest,card,index)=>Math.abs(card.getBoundingClientRect().left-left)<Math.abs(cards[closest].getBoundingClientRect().left-left)?index:closest,0);
+  updateCatalogControls();
+}
+productGrid.addEventListener('scroll',()=>{if(!productScrollFrame)productScrollFrame=requestAnimationFrame(syncScrolledProduct);},{passive:true});
+catalogPrevious.addEventListener('click',()=>scrollToProduct(Math.max(0,activeProduct-1),true));
+catalogNext.addEventListener('click',()=>scrollToProduct(Math.min(volumes.length-1,activeProduct+1),true));
+productGrid.addEventListener('keydown',event=>{
+  if(!mobileCatalog.matches||event.target!==productGrid||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();
+  const index=event.key==='Home'?0:event.key==='End'?volumes.length-1:Math.max(0,Math.min(volumes.length-1,activeProduct+(event.key==='ArrowRight'?1:-1)));
+  scrollToProduct(index,true);
+});
+new ResizeObserver(()=>{
+  const width=productGrid.clientWidth;if(width===productGridWidth)return;
+  productGridWidth=width;updateCatalogControls();
+  if(mobileCatalog.matches)scrollToProduct(activeProduct);else productGrid.scrollLeft=0;
+}).observe(productGrid);
+mobileCatalog.addEventListener('change',()=>{updateCatalogControls();if(mobileCatalog.matches)scrollToProduct(activeProduct);else productGrid.scrollLeft=0;});
 function renderCatalog(){
   document.querySelector('#fuel-tabs').innerHTML=fuels.map(f=>`<button data-fuel="${f.id}" aria-pressed="${selectedFuel.id===f.id}">${f.name}</button>`).join('');
-  document.querySelector('#products').innerHTML=volumes.map(v=>`<article class="product" aria-label="Syntonik ${selectedFuel.name}, ${v.label}"><div class="product-photo photo-${v.ml}"><img src="/assets/products/${selectedFuel.id}-${v.ml}.png" width="1122" height="1402" loading="lazy" alt="Syntonik ${selectedFuel.name}, ${v.label}"></div><h3>${v.label}</h3><p class="fuel-capacity">до ${number(v.ml*10)} л топлива</p><strong class="product-price">${money(v.price)}</strong><button data-order data-volume="${v.ml}" data-fuel="${selectedFuel.id}" aria-label="Заказать Syntonik ${selectedFuel.name}, ${v.label}">Заказать</button></article>`).join('');
+  document.querySelector('#products').innerHTML=volumes.map(v=>`<article class="product" aria-label="Syntonik ${selectedFuel.name}, ${v.label}"><div class="product-photo photo-${v.ml}"><img src="/assets/products/${selectedFuel.id}-${v.ml}.png" width="1122" height="1402" loading="lazy" alt="Syntonik ${selectedFuel.name}, ${v.label}"></div><h3>${v.label}</h3><p class="fuel-capacity">Хватит на ${number(v.ml*10)} л топлива</p><strong class="product-price">${money(v.price)}</strong><button data-order data-volume="${v.ml}" data-fuel="${selectedFuel.id}" aria-label="Заказать Syntonik ${selectedFuel.name}, ${v.label}">Заказать</button></article>`).join('');
+  activeProduct=0;productGrid.scrollTo({left:0,behavior:'instant'});updateCatalogControls();
 }
 renderCatalog();
 document.querySelector('#calculator-catalog').addEventListener('click',event=>{
@@ -161,7 +202,7 @@ leadForm.addEventListener('submit',async event=>{
   const fields=new FormData(leadForm),order=leadForm.dataset.kind==='order';
   sendingLead=true;button.disabled=true;leadForm.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
   try{
-    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:fields.get('comment')||'',
+    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:[fields.get('comment')||'',order?`Цена упаковки: ${money(volumes.find(v=>String(v.ml)===fields.get('volume')).price)}`:''].filter(Boolean).join('\n'),
       form:leadForm.dataset.kind,page:window.location.href,...sessionUtms,
       consent:fields.get('consent')==='on',terms:fields.get('terms')==='on',
       fuel:order?fuels.find(f=>f.id===fields.get('fuel'))?.name||'':'',
