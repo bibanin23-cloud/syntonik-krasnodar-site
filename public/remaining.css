@@ -274,6 +274,7 @@
  .calculator-section .fuel-switch button { font-size:14px; padding:8px 3px; }
  .calculator-section #calculator-form { gap:16px 12px; }
  .calculator-section #calculator-form>label>span,.calculator-section #calculator-form legend { min-height:38px; }
+ .calculator-section #calculator-form>label>span { font-size:clamp(11.5px,3vw,14px); white-space:nowrap; }
  .calculator-section #calculator-form .scenarios { gap:4px; flex-wrap:nowrap; }
  .calculator-section #calculator-form .scenarios label { font-size:14px; min-height:48px; }
  .calculator-section #calculator-form input[type=radio] { width:16px; height:16px; }
@@ -285,6 +286,7 @@
 @media(max-width:380px) {
  .calculator-section #calculator-form { grid-template-columns:1fr; gap:14px; }
  .calculator-section #calculator-form>label>span,.calculator-section #calculator-form legend { min-height:0; }
+ .calculator-section #calculator-form>label>span { font-size:14px; }
  .calculator-section #calculator-form .scenarios { gap:18px; }
  .calculator-section .net-savings .money { font-size:42px; }
 }
