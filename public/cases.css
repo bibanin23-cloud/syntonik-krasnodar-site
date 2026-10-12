@@ -49,6 +49,9 @@
 .cases-individual em { color: #85cb45; }
 .cases-disclaimer p:last-child { padding-left: 24px; border-left: 1px solid #757c77; color: #d0d5d2; }
 
+@media (min-width: 1101px) {
+  #cases-title { font-size: clamp(30px, 2.65vw, 44px); white-space: nowrap; }
+}
 @media (max-width: 1350px) {
   .cases-grid { gap: 14px 16px; }
   .case-card { padding: 14px; }
