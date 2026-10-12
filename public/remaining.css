@@ -384,9 +384,11 @@
 #lead-dialog #lead-price-summary { color:var(--green); font-size:22px; white-space:nowrap; align-self:center; }
 #lead-dialog label { margin-bottom:12px; }
 #lead-dialog input:not([type=checkbox]),#lead-dialog textarea { width:100%; margin-top:5px; padding:10px; min-height:44px; font:inherit; font-size:16px; border:1px solid #b6c0b0; border-radius:5px; }
+#lead-dialog #lead-fuel { display:block; width:100%; margin-top:5px; padding:10px; min-height:44px; font:inherit; font-size:16px; border:1px solid #b6c0b0; border-radius:5px; background:white; }
 #lead-dialog textarea { display:block; resize:vertical; }
 #lead-dialog input[aria-invalid=true] { border-color:#b3261e; }
-#lead-dialog #lead-phone-error { display:block; margin-top:5px; font-size:12px; font-weight:400; color:#b3261e; }
+#lead-dialog #lead-fuel[aria-invalid=true] { border-color:#b3261e; }
+#lead-dialog #lead-phone-error,#lead-dialog #lead-fuel-error { display:block; margin-top:5px; font-size:12px; font-weight:400; color:#b3261e; }
 #lead-dialog #lead-comment { margin-bottom:12px; }
 #lead-dialog #lead-comment summary { min-height:44px; display:list-item; padding:10px 0; font-size:14px; cursor:pointer; }
 #lead-dialog .lead-comment-label { margin:0; font-size:13px; }

@@ -26,6 +26,8 @@ function updateCalculator(){
 calcForm.addEventListener('input',updateCalculator);updateCalculator();
 let selectedFuel=fuels[0];
 let calculatorFuel=fuels[0];
+let lastChosenFuelId='';
+calcForm.addEventListener('input',()=>{lastChosenFuelId=calculatorFuel.id;});
 function renderCalculatorTabs(){document.querySelector('#calculator-tabs').innerHTML=fuels.map(f=>`<button type="button" data-calc-fuel="${f.id}" aria-pressed="${calculatorFuel.id===f.id}">${f.name}</button>`).join('');}
 renderCalculatorTabs();
 const productGrid=document.querySelector('#products');
@@ -77,7 +79,7 @@ renderCatalog();
 document.querySelector('#calculator-catalog').addEventListener('click',event=>{
   if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
   event.preventDefault();
-  selectedFuel=calculatorFuel;renderCatalog();
+  selectedFuel=calculatorFuel;lastChosenFuelId=calculatorFuel.id;renderCatalog();
   const catalog=document.querySelector('#catalog');
   catalog.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth',block:'start'});
   document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus({preventScroll:true});
@@ -177,6 +179,8 @@ const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelec
 const leadFields=document.querySelector('#lead-fields'),leadSuccess=document.querySelector('#lead-success');
 const phoneError=document.querySelector('#lead-phone-error');
 const testDriveProduct={ml:15,label:'15 мл',price:690,name:'Syntonik TEST DRIVE'};
+const testDriveFuels=fuels.filter(f=>['petrol','diesel','lpg'].includes(f.id));
+const fuelError=document.querySelector('#lead-fuel-error');
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
 document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);
 let sendingLead=false;
@@ -185,7 +189,7 @@ leadForm.elements.fuel.innerHTML=fuels.map(f=>`<option value="${f.id}">${f.name}
 leadForm.elements.volume.innerHTML=volumes.map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
 function orderChoice(){
   const trial=leadForm.dataset.testDrive==='true';
-  return {trial,fuel:fuels.find(f=>f.id===leadForm.elements.fuel.value),product:(trial?[testDriveProduct]:volumes).find(v=>String(v.ml)===leadForm.elements.volume.value)};
+  return {trial,fuel:(trial?testDriveFuels:fuels).find(f=>f.id===leadForm.elements.fuel.value),product:(trial?[testDriveProduct]:volumes).find(v=>String(v.ml)===leadForm.elements.volume.value)};
 }
 function openForm(kind,fuel,volume,testDrive=false){
   if(sendingLead)return;
@@ -198,24 +202,31 @@ function openForm(kind,fuel,volume,testDrive=false){
   document.querySelector('#lead-order-summary').hidden=!order;
   document.querySelector('#lead-payment-note').hidden=!order;
   document.querySelector('#lead-comment').open=false;
+  document.querySelector('#order-fields').hidden=!trial;
+  leadForm.elements.fuel.required=trial;
+  leadForm.elements.fuel.innerHTML=(trial?'<option value="" disabled>Выберите тип топлива</option>':'')+(trial?testDriveFuels:fuels).map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
   leadForm.elements.volume.innerHTML=(trial?[testDriveProduct]:volumes).map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
   try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'form_open_order':'form_open_callback');}catch{}
   document.querySelector('#terms-label').hidden=!order;
   leadForm.elements.terms.required=order;
   leadForm.elements.fuel.disabled=!order;leadForm.elements.volume.disabled=!order;
-  leadForm.elements.fuel.value=fuel||selectedFuel.id;leadForm.elements.volume.value=trial?'15':volume||'250';
+  const preferredFuel=fuel||lastChosenFuelId;
+  leadForm.elements.fuel.value=trial?(testDriveFuels.some(f=>f.id===preferredFuel)?preferredFuel:''):fuel||selectedFuel.id;
+  if(order&&!trial)lastChosenFuelId=leadForm.elements.fuel.value;
+  leadForm.elements.volume.value=trial?'15':volume||'250';
   const choice=orderChoice();
-  document.querySelector('#lead-product-summary').textContent=order&&choice.product&&choice.fuel?(trial?`Syntonik TEST DRIVE · ${choice.product.label}`:`Syntonik · ${choice.fuel.name} · ${choice.product.label}`):'';
+  document.querySelector('#lead-product-summary').textContent=order&&choice.product&&(trial||choice.fuel)?(trial?`Syntonik TEST DRIVE · ${choice.product.label}`:`Syntonik · ${choice.fuel.name} · ${choice.product.label}`):'';
   document.querySelector('#lead-price-summary').textContent=order&&choice.product?money(choice.product.price):'';
   for(const field of ['name','phone','city'])leadForm.elements[field].setCustomValidity('');
   phoneError.hidden=true;phoneError.textContent='';leadForm.elements.phone.removeAttribute('aria-invalid');
+  leadForm.elements.fuel.setCustomValidity('');leadForm.elements.fuel.removeAttribute('aria-invalid');fuelError.hidden=true;fuelError.textContent='';
   document.querySelector('#form-status').textContent='';dialog.showModal();leadForm.elements.name.focus();
 }
 document.addEventListener('click',event=>{
   const fuelButton=event.target.closest('[data-fuel]:not([data-order])');
-  if(fuelButton){selectedFuel=fuels.find(f=>f.id===fuelButton.dataset.fuel);renderCatalog();document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus();}
+  if(fuelButton){selectedFuel=fuels.find(f=>f.id===fuelButton.dataset.fuel);lastChosenFuelId=selectedFuel.id;renderCatalog();document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus();}
   const calcFuelButton=event.target.closest('[data-calc-fuel]');
-  if(calcFuelButton){calculatorFuel=fuels.find(f=>f.id===calcFuelButton.dataset.calcFuel);renderCalculatorTabs();document.querySelector(`[data-calc-fuel="${calculatorFuel.id}"]`).focus();}
+  if(calcFuelButton){calculatorFuel=fuels.find(f=>f.id===calcFuelButton.dataset.calcFuel);lastChosenFuelId=calculatorFuel.id;renderCalculatorTabs();document.querySelector(`[data-calc-fuel="${calculatorFuel.id}"]`).focus();}
   if(event.target.closest('[data-catalog]')){
     if(location.hash!=='#catalog')location.hash='catalog';
     else document.querySelector('#catalog').scrollIntoView({behavior:'smooth',block:'start'});
@@ -250,6 +261,16 @@ function validatePhone(){
 }
 leadForm.elements.phone.addEventListener('blur',validatePhone);
 leadForm.elements.phone.addEventListener('input',()=>{if(!phoneError.hidden)validatePhone();});
+function validateTestDriveFuel(){
+  const valid=testDriveFuels.some(f=>f.id===leadForm.elements.fuel.value);
+  const message=valid?'':'Выберите тип топлива';
+  leadForm.elements.fuel.setCustomValidity(message);fuelError.textContent=message;fuelError.hidden=valid;
+  if(valid)leadForm.elements.fuel.removeAttribute('aria-invalid');else leadForm.elements.fuel.setAttribute('aria-invalid','true');
+  return valid;
+}
+leadForm.elements.fuel.addEventListener('change',()=>{
+  if(leadForm.dataset.testDrive==='true'&&validateTestDriveFuel())lastChosenFuelId=leadForm.elements.fuel.value;
+});
 leadForm.addEventListener('submit',async event=>{
   event.preventDefault();
   if(sendingLead||!leadSuccess.hidden)return;
@@ -257,6 +278,7 @@ leadForm.addEventListener('submit',async event=>{
   if(!leadForm.elements.name.value){leadForm.elements.name.setCustomValidity('Заполните поле.');leadForm.elements.name.reportValidity();leadForm.elements.name.focus();return;}
   const phone=validatePhone();
   if(!phone){leadForm.elements.phone.focus();return;}
+  if(leadForm.dataset.testDrive==='true'&&!validateTestDriveFuel()){leadForm.elements.fuel.reportValidity();leadForm.elements.fuel.focus();return;}
   if(!leadForm.reportValidity())return;
   const status=document.querySelector('#form-status'),button=leadForm.querySelector('[type="submit"]');
   const fields=new FormData(leadForm),order=leadForm.dataset.kind==='order';

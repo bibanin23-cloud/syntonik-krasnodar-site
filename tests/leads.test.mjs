@@ -149,13 +149,14 @@ function formHarness(send){
   const dialog={addEventListener(){},close(){},showModal(){}};
   const fields={hidden:false},successView={hidden:true},error=control('');error.hidden=true;
   const title=control(''),summary=control(''),price=control(''),choice=control('');
-  const targets={'#lead-dialog':dialog,'#lead-form':form,'#lead-setup-note':note,'#form-status':status,'#lead-fields':fields,'#lead-success':successView,'#lead-phone-error':error,'#dialog-title':title,'#lead-order-summary':choice,'#lead-product-summary':summary,'#lead-price-summary':price,'#lead-payment-note':control(''),'#lead-comment':control(''),'#terms-label':control(''),'#close-dialog':control(''),'#close-lead-success':control('')};
+  const fuelError=control(''),orderFields=control('');fuelError.hidden=true;orderFields.hidden=true;
+  const targets={'#lead-dialog':dialog,'#lead-form':form,'#lead-setup-note':note,'#form-status':status,'#lead-fields':fields,'#lead-success':successView,'#lead-phone-error':error,'#lead-fuel-error':fuelError,'#order-fields':orderFields,'#dialog-title':title,'#lead-order-summary':choice,'#lead-product-summary':summary,'#lead-price-summary':price,'#lead-payment-note':control(''),'#lead-comment':control(''),'#terms-label':control(''),'#close-dialog':control(''),'#close-lead-success':control('')};
   const context={document:{querySelector:s=>targets[s],addEventListener(){}},window:{location:{href:'https://example.test/'}},LEAD_ENDPOINT:endpoint,
-    createLeadSubmitter:()=>send,normaliseRuMobile,sessionUtms:{utm_source:'test'},selectedFuel:{id:'petrol'},fuels:[{id:'petrol',name:'Бензин'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
+    createLeadSubmitter:()=>send,normaliseRuMobile,sessionUtms:{utm_source:'test'},selectedFuel:{id:'petrol'},lastChosenFuelId:'',fuels:[{id:'petrol',name:'Бензин'},{id:'diesel',name:'Дизель'},{id:'lpg',name:'ГБО'},{id:'mazut',name:'Мазут'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
     FormData:class{constructor(form){this.values=Object.fromEntries(Object.entries(form.elements).map(([k,e])=>[k,((k==='consent'||k==='terms')&&!e.checked)?null:e.value]));}get(field){return this.values[field]??null;}}
   };
   vm.createContext(context);vm.runInContext(appSource.slice(appSource.indexOf("const dialog=document.querySelector('#lead-dialog')")),context);
-  return {form,button,status,note,fields,successView,error,title,summary,price,choice,context,open:(...args)=>context.openForm(...args),submit:()=>handlers.submit({preventDefault(){}})};
+  return {form,button,status,note,fields,successView,error,fuelError,orderFields,title,summary,price,choice,context,open:(...args)=>context.openForm(...args),submit:()=>handlers.submit({preventDefault(){}})};
 }
 
 test('existing form blocks double clicks, shows sending, resets on success and unlocks',async()=>{
@@ -217,4 +218,37 @@ test('unconfirmed server result keeps fields and does not show success; confirme
 });
 test('consent and order terms remain mandatory in the form and shared submitter',async()=>{
   let calls=0;const h=formHarness(()=>calls++);h.form.elements.consent.checked=false;await h.submit();h.form.elements.consent.checked=true;h.form.dataset.kind='order';h.form.elements.terms.checked=false;await h.submit();assert.equal(calls,0);const submit=createLeadSubmitter(endpoint,{fetcher:()=>calls++});assert.throws(()=>submit({...lead,form:'order',terms:false}));assert.equal(calls,0);
+});
+
+test('TEST DRIVE starts with a required placeholder and reuses only an eligible known fuel',()=>{
+  const h=formHarness(()=>{});h.open('order',undefined,undefined,true);
+  assert.equal(h.orderFields.hidden,false);assert.equal(h.form.elements.fuel.required,true);assert.equal(h.form.elements.fuel.value,'');
+  assert.equal(h.summary.textContent,'Syntonik TEST DRIVE · 15 мл');assert.equal(h.price.textContent,'690');
+  assert.match(h.form.elements.fuel.innerHTML,/Выберите тип топлива/);assert.doesNotMatch(h.form.elements.fuel.innerHTML,/mazut|Мазут/);
+  for(const fuel of ['petrol','diesel','lpg']){h.context.lastChosenFuelId=fuel;h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,fuel);}
+  h.context.lastChosenFuelId='mazut';h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,'');
+  h.open('order','mazut','250');assert.equal(h.orderFields.hidden,true);assert.equal(h.form.elements.fuel.required,false);assert.equal(h.form.elements.fuel.value,'mazut');assert.match(h.form.elements.fuel.innerHTML,/Мазут/);
+  h.open('callback');assert.equal(h.orderFields.hidden,true);assert.equal(h.form.elements.fuel.disabled,true);assert.equal(h.form.elements.fuel.required,false);
+});
+
+test('missing or unsupported TEST DRIVE fuel is blocked and a corrected choice clears its error',async()=>{
+  let calls=0;const h=formHarness(async()=>{calls++;return {success:true};});
+  h.form.dataset.kind='order';h.form.dataset.testDrive='true';h.form.elements.volume.value='15';
+  for(const fuel of ['', 'mazut', 'unknown']){h.form.elements.fuel.value=fuel;await h.submit();assert.equal(calls,0);assert.equal(h.fuelError.textContent,'Выберите тип топлива');assert.equal(h.fuelError.hidden,false);assert.equal(h.form.elements.fuel.attributes['aria-invalid'],'true');}
+  h.form.elements.fuel.value='diesel';h.form.elements.fuel.handlers.change();assert.equal(h.fuelError.hidden,true);assert.equal(h.context.lastChosenFuelId,'diesel');
+  h.form.elements.phone.value='8999123456';await h.submit();assert.equal(calls,0);assert.equal(h.error.hidden,false);
+  h.form.elements.phone.value='89991234567';await h.submit();assert.equal(calls,1);
+});
+
+test('each TEST DRIVE fuel and the final changed selection reach existing Sheets and Telegram fields',async()=>{
+  for(const [fuel,name] of [['petrol','Бензин'],['diesel','Дизель'],['lpg','ГБО']]){
+    const backend=scriptHarness({config:{MAX_ENABLED:'false'}});let payload;
+    const send=createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(_,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>backend.post(payload)};}});
+    const h=formHarness(send);h.form.dataset.kind='order';h.form.dataset.testDrive='true';h.form.elements.volume.value='15';
+    h.form.elements.fuel.value='petrol';h.form.elements.fuel.handlers.change();h.form.elements.fuel.value=fuel;h.form.elements.fuel.handlers.change();await h.submit();
+    assert.equal(payload.fuel,name);assert.equal(payload.volume,'15 мл');assert.equal(payload.phone,'+79950000000');assert.equal(payload.utm_source,'test');
+    assert.equal(backend.rows[1].length,12);assert.ok(backend.rows[1][3].includes('Топливо: '+name));assert.equal(backend.calls.length,1);
+    const message=JSON.parse(backend.calls[0].options.payload).text;for(const text of ['Товар: Syntonik TEST DRIVE','Топливо: '+name,'Объём: 15 мл','Цена упаковки: 690'])assert.ok(message.includes(text));
+    assert.equal(h.successView.hidden,false);
+  }
 });
