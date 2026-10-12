@@ -2,7 +2,7 @@ import {calculate} from './lib/calculator.js';
 import {fuels,volumes} from './data/catalog.js';
 import {cases,caseVideoEmbedUrl} from './data/cases.js';
 import {LEAD_ENDPOINT} from './lead-config.js';
-import {createLeadSubmitter,sessionUtms} from './lib/leads.js';
+import {createLeadSubmitter,sessionUtms,normaliseRuMobile} from './lib/leads.js';
 import './remaining.js';
 const siteHeader=document.querySelector('.site-header');
 function updateHeaderSurface(){siteHeader.classList.toggle('is-scrolled',window.scrollY>12);}
@@ -174,6 +174,8 @@ testDriveTerms.addEventListener('click',event=>{
 });
 testDriveTerms.addEventListener('close',()=>testDriveTermsTrigger.focus({preventScroll:true}));
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
+const leadFields=document.querySelector('#lead-fields'),leadSuccess=document.querySelector('#lead-success');
+const phoneError=document.querySelector('#lead-phone-error');
 const testDriveProduct={ml:15,label:'15 мл',price:690,name:'Syntonik TEST DRIVE'};
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
 document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);
@@ -181,24 +183,33 @@ let sendingLead=false;
 let formOpener;
 leadForm.elements.fuel.innerHTML=fuels.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
 leadForm.elements.volume.innerHTML=volumes.map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
+function orderChoice(){
+  const trial=leadForm.dataset.testDrive==='true';
+  return {trial,fuel:fuels.find(f=>f.id===leadForm.elements.fuel.value),product:(trial?[testDriveProduct]:volumes).find(v=>String(v.ml)===leadForm.elements.volume.value)};
+}
 function openForm(kind,fuel,volume,testDrive=false){
   if(sendingLead)return;
   formOpener=document.activeElement;
   leadForm.reset();leadForm.dataset.kind=kind;
-  const order=kind==='order';
-  const trial=order&&testDrive;
+  const order=kind==='order',trial=order&&testDrive;
   leadForm.dataset.testDrive=String(trial);
-  document.querySelector('#dialog-title').textContent=order?(trial?'Заказать Syntonik TEST DRIVE':'Заказать Syntonik'):'Обратный звонок';
-  document.querySelector('#test-drive-order-summary').hidden=!trial;
+  leadFields.hidden=false;leadSuccess.hidden=true;
+  document.querySelector('#dialog-title').textContent=order?'Оформить заявку':'Заказать обратный звонок';
+  document.querySelector('#lead-order-summary').hidden=!order;
+  document.querySelector('#lead-payment-note').hidden=!order;
+  document.querySelector('#lead-comment').open=false;
   leadForm.elements.volume.innerHTML=(trial?[testDriveProduct]:volumes).map(v=>`<option value="${v.ml}">${v.label} — ${money(v.price)}</option>`).join('');
   try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'form_open_order':'form_open_callback');}catch{}
-  document.querySelector('#order-fields').hidden=!order;
   document.querySelector('#terms-label').hidden=!order;
   leadForm.elements.terms.required=order;
   leadForm.elements.fuel.disabled=!order;leadForm.elements.volume.disabled=!order;
   leadForm.elements.fuel.value=fuel||selectedFuel.id;leadForm.elements.volume.value=trial?'15':volume||'250';
+  const choice=orderChoice();
+  document.querySelector('#lead-product-summary').textContent=order&&choice.product&&choice.fuel?(trial?`Syntonik TEST DRIVE · ${choice.product.label}`:`Syntonik · ${choice.fuel.name} · ${choice.product.label}`):'';
+  document.querySelector('#lead-price-summary').textContent=order&&choice.product?money(choice.product.price):'';
   for(const field of ['name','phone','city'])leadForm.elements[field].setCustomValidity('');
-  document.querySelector('#form-status').textContent='';dialog.showModal();
+  phoneError.hidden=true;phoneError.textContent='';leadForm.elements.phone.removeAttribute('aria-invalid');
+  document.querySelector('#form-status').textContent='';dialog.showModal();leadForm.elements.name.focus();
 }
 document.addEventListener('click',event=>{
   const fuelButton=event.target.closest('[data-fuel]:not([data-order])');
@@ -209,31 +220,54 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-callback]'))openForm('callback');
 });
 document.querySelector('#close-dialog').addEventListener('click',()=>dialog.close());
-dialog.addEventListener('close',()=>{if(formOpener?.isConnected)formOpener.focus();});
-for(const field of ['name','phone','city'])leadForm.elements[field].addEventListener('input',()=>leadForm.elements[field].setCustomValidity(''));
+document.querySelector('#close-lead-success').addEventListener('click',()=>dialog.close());
+dialog.addEventListener('close',()=>{if(formOpener?.isConnected)formOpener.focus({preventScroll:true});});
+dialog.addEventListener('click',event=>{
+  if(event.target!==dialog)return;
+  const bounds=dialog.getBoundingClientRect();
+  if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();
+});
+dialog.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const controls=[...dialog.querySelectorAll('button,a[href],input,select,textarea,summary')].filter(e=>!e.disabled&&e.getClientRects().length);
+  const first=controls[0],last=controls.at(-1);
+  if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){
+    event.preventDefault();(event.shiftKey?last:first).focus();
+  }
+});
+for(const field of ['name','city'])leadForm.elements[field].addEventListener('input',()=>leadForm.elements[field].setCustomValidity(''));
+function validatePhone(){
+  const phone=normaliseRuMobile(leadForm.elements.phone.value);
+  const message=phone?'':'Проверьте номер: укажите 10 цифр после +7.';
+  leadForm.elements.phone.setCustomValidity(message);
+  phoneError.textContent=message;phoneError.hidden=Boolean(phone);
+  if(phone)leadForm.elements.phone.removeAttribute('aria-invalid');else leadForm.elements.phone.setAttribute('aria-invalid','true');
+  return phone;
+}
+leadForm.elements.phone.addEventListener('blur',validatePhone);
+leadForm.elements.phone.addEventListener('input',()=>{if(!phoneError.hidden)validatePhone();});
 leadForm.addEventListener('submit',async event=>{
   event.preventDefault();
-  if(sendingLead)return;
-  for(const field of ['name','phone','city']){
-    const input=leadForm.elements[field];input.value=input.value.trim();
-    if(!input.value){input.setCustomValidity('Заполните поле.');input.reportValidity();return;}
-  }
-  const digits=leadForm.elements.phone.value.replace(/\D/g,'');
-  if(digits.length<10||digits.length>15){leadForm.elements.phone.setCustomValidity('Введите телефон: от 10 до 15 цифр.');leadForm.elements.phone.reportValidity();return;}
+  if(sendingLead||!leadSuccess.hidden)return;
+  for(const field of ['name','city'])leadForm.elements[field].value=leadForm.elements[field].value.trim();
+  if(!leadForm.elements.name.value){leadForm.elements.name.setCustomValidity('Заполните поле.');leadForm.elements.name.reportValidity();leadForm.elements.name.focus();return;}
+  const phone=validatePhone();
+  if(!phone){leadForm.elements.phone.focus();return;}
   if(!leadForm.reportValidity())return;
   const status=document.querySelector('#form-status'),button=leadForm.querySelector('[type="submit"]');
   const fields=new FormData(leadForm),order=leadForm.dataset.kind==='order';
-  const trial=order&&leadForm.dataset.testDrive==='true';
-  const orderProduct=order?(trial?[testDriveProduct]:volumes).find(v=>String(v.ml)===fields.get('volume')):null;
+  const {trial,fuel,product:orderProduct}=orderChoice();
+  if(order&&(!fuel||!orderProduct)){status.textContent='Выберите товар в каталоге и откройте заявку ещё раз.';return;}
   sendingLead=true;button.disabled=true;leadForm.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
   try{
-    await submitLead({name:fields.get('name'),phone:fields.get('phone'),city:fields.get('city'),comment:[fields.get('comment')||'',trial?`Товар: ${testDriveProduct.name}`:'',order?`Цена упаковки: ${money(orderProduct.price)}`:''].filter(Boolean).join('\n'),
+    const receipt=await submitLead({name:fields.get('name'),phone,city:fields.get('city'),comment:[fields.get('comment')||'',order&&trial?`Товар: ${testDriveProduct.name}`:'',order?`Цена упаковки: ${money(orderProduct.price)}`:''].filter(Boolean).join('\n'),
       form:leadForm.dataset.kind,page:window.location.href,...sessionUtms,
       consent:fields.get('consent')==='on',terms:fields.get('terms')==='on',
-      fuel:order?fuels.find(f=>f.id===fields.get('fuel'))?.name||'':'',
-      volume:order?orderProduct?.label||'':''});
-    leadForm.reset();status.textContent='Спасибо! Заявка отправлена.';
-    try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'lead_order_success':'lead_callback_success',{city:fields.get('city')||'',fuel:order?(fuels.find(f=>f.id===fields.get('fuel'))?.name||''):'',volume:order?(orderProduct?.label||''):''});}catch{}
+      fuel:order?fuel.name:'',volume:order?orderProduct.label:''});
+    if(receipt?.success!==true)throw new Error('Lead was not saved');
+    leadForm.reset();status.textContent='';leadFields.hidden=true;leadSuccess.hidden=false;
+    document.querySelector('#dialog-title').textContent='Заявка отправлена!';document.querySelector('#close-lead-success').focus();
+    try{if(typeof window.ym==='function')window.ym(113548520,'reachGoal',order?'lead_order_success':'lead_callback_success',{city:fields.get('city')||'',fuel:order?fuel.name:'',volume:order?orderProduct.label:''});}catch{}
   }catch{status.textContent='Не удалось отправить заявку. Попробуйте ещё раз.';}
   finally{sendingLead=false;button.disabled=false;leadForm.removeAttribute('aria-busy');}
 });

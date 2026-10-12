@@ -43,10 +43,21 @@ function leadText(value,limit){
   if(value!=null && typeof value!=='string')throw new Error('field');
   return (value||'').trim().replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,limit);
 }
+function normaliseRuMobile(value){
+  if(typeof value!=='string')return null;
+  const text=value.replace(/^[ \u00a0\u202f]+|[ \u00a0\u202f]+$/g,'');
+  if(!/^\+?[0-9 ()\-\u00a0\u202f]+$/.test(text))return null;
+  const compact=text.replace(/[ ()\-\u00a0\u202f]/g,'');
+  if(/^\+79\d{9}$/.test(compact))return compact;
+  if(/^9\d{9}$/.test(compact))return '+7'+compact;
+  if(/^[78]9\d{9}$/.test(compact))return '+7'+compact.slice(1);
+  return null;
+}
 function normalizeLead(input){
   if(!input || Array.isArray(input) || typeof input!=='object')throw new Error('data');
   const data={};
   for(const [field,limit] of Object.entries({name:80,phone:80,comment:1000,form:80,page:1000,city:100,fuel:40,volume:40,request_id:80}))data[field]=leadText(input[field],limit);
+  data.phone=normaliseRuMobile(input.phone);
   for(const field of LEAD_UTMS)data[field]=leadText(input[field],200);
   if(!data.name||!data.phone||!['order','callback'].includes(data.form)||!/^https?:\/\/[^\s]+$/.test(data.page)||! /^[a-zA-Z0-9-]{16,80}$/.test(data.request_id)||input.consent!==true)throw new Error('validation');
   if(data.form==='order' && input.terms!==true)throw new Error('terms');

@@ -366,10 +366,41 @@
 #test-drive-terms ol { margin:0 0 18px; padding-left:24px; }
 #test-drive-terms li { margin-bottom:10px; font-size:16px; line-height:1.5; }
 #test-drive-terms>p { font-size:14px; line-height:1.45; margin:0; color:#56625a; }
-#lead-dialog #test-drive-order-summary { font-size:16px; font-weight:600; margin:0 0 16px; }
 @media(max-width:900px) {
  .test-drive-section .test-drive-layout { grid-template-columns:1fr; grid-template-areas:'intro' 'visual' 'offer'; }
  .test-drive-section .test-drive-visual img { width:auto; max-width:100%; height:230px; }
+}
+
+/* Shared lead form: styles are limited to its existing dialog. */
+#lead-dialog { padding:20px; max-height:90dvh; }
+#lead-dialog [hidden] { display:none !important; }
+#lead-dialog .dialog-head h2 { font-size:26px; margin:0 0 14px; }
+#lead-dialog .dialog-head button { width:44px; min-height:44px; flex:0 0 44px; padding:0; }
+#lead-dialog #lead-order-summary { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 12px; padding:12px; margin-bottom:14px; border-radius:6px; background:var(--soft); }
+#lead-dialog #lead-order-summary p { grid-column:1/-1; margin:0; color:#56625a; font-size:12px; }
+#lead-dialog #lead-product-summary { font-size:15px; align-self:center; }
+#lead-dialog #lead-price-summary { color:var(--green); font-size:22px; white-space:nowrap; align-self:center; }
+#lead-dialog label { margin-bottom:12px; }
+#lead-dialog input:not([type=checkbox]),#lead-dialog textarea { width:100%; margin-top:5px; padding:10px; min-height:44px; font:inherit; font-size:16px; border:1px solid #b6c0b0; border-radius:5px; }
+#lead-dialog textarea { display:block; resize:vertical; }
+#lead-dialog input[aria-invalid=true] { border-color:#b3261e; }
+#lead-dialog #lead-phone-error { display:block; margin-top:5px; font-size:12px; font-weight:400; color:#b3261e; }
+#lead-dialog #lead-comment { margin-bottom:12px; }
+#lead-dialog #lead-comment summary { min-height:44px; display:list-item; padding:10px 0; font-size:14px; cursor:pointer; }
+#lead-dialog .lead-comment-label { margin:0; font-size:13px; }
+#lead-dialog .check { min-height:32px; line-height:1.4; margin:10px 0; }
+#lead-dialog .check input { width:18px; height:18px; flex:0 0 18px; margin:0 6px 0 0; }
+#lead-dialog [type=submit],#lead-dialog #close-lead-success { width:100%; min-height:48px; }
+#lead-dialog #lead-payment-note { font-size:12px; line-height:1.4; color:#56625a; margin:8px 0; }
+#lead-dialog .lead-phone-fallback { display:block; text-align:center; font-size:13px; margin-top:12px; }
+#lead-dialog #form-status { font-size:14px; margin:10px 0 0; }
+#lead-dialog #form-status:empty { display:none; }
+#lead-dialog #lead-success p { font-size:16px; line-height:1.5; }
+@media(max-width:430px) {
+  #lead-dialog { padding:16px; }
+  #lead-dialog .dialog-head h2 { font-size:23px; }
+  #lead-dialog #lead-order-summary { grid-template-columns:1fr; }
+  #lead-dialog #lead-price-summary { font-size:22px; }
 }
 @media(max-width:760px) {
  .test-drive-section { padding:28px 5% 22px; }

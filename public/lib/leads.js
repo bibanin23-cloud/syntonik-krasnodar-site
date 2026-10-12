@@ -1,6 +1,17 @@
 export const UTM_FIELDS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
 const clean = (value,limit) => String(value ?? '').trim().replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,limit);
 
+export function normaliseRuMobile(value){
+  if(typeof value!=='string')return null;
+  const text=value.replace(/^[ \u00a0\u202f]+|[ \u00a0\u202f]+$/g,'');
+  if(!/^\+?[0-9 ()\-\u00a0\u202f]+$/.test(text))return null;
+  const compact=text.replace(/[ ()\-\u00a0\u202f]/g,'');
+  if(/^\+79\d{9}$/.test(compact))return compact;
+  if(/^9\d{9}$/.test(compact))return '+7'+compact;
+  if(/^[78]9\d{9}$/.test(compact))return '+7'+compact.slice(1);
+  return null;
+}
+
 export function captureSessionUtms(url,storage){
   const key='syntonik:first-touch-utm';
   try{
@@ -29,11 +40,13 @@ export function createLeadSubmitter(endpoint,{fetcher=globalThis.fetch,makeId=()
     if(pending)return pending;
     if(!endpoint)throw new Error('LEAD_ENDPOINT is not configured');
     const lead={};
-    for(const [field,limit] of Object.entries({name:80,phone:80,comment:1000,form:80,page:1000,city:100,fuel:40,volume:40}))lead[field]=clean(data[field],limit);
+    for(const [field,limit] of Object.entries({name:80,comment:1000,form:80,page:1000,city:100,fuel:40,volume:40}))lead[field]=clean(data[field],limit);
+    lead.phone=normaliseRuMobile(data.phone);
     for(const field of UTM_FIELDS)lead[field]=clean(data[field],200);
     lead.consent=data.consent===true;
     lead.terms=data.terms===true;
     if(!lead.name||!lead.phone||!lead.form||!/^https?:\/\//.test(lead.page)||!lead.consent)throw new Error('Invalid lead');
+    if(lead.form==='order'&&!lead.terms)throw new Error('Invalid order terms');
     const fingerprint=JSON.stringify(lead);
     if(retry?.fingerprint!==fingerprint)retry={fingerprint,id:makeId(),timestamp:now()};
     const payload={...lead,request_id:retry.id,timestamp:retry.timestamp};

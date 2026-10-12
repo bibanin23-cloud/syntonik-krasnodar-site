@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
-import {captureSessionUtms,createLeadSubmitter} from '../public/lib/leads.js';
+import {captureSessionUtms,createLeadSubmitter,normaliseRuMobile} from '../public/lib/leads.js';
 
 const endpoint='https://script.google.com/macros/s/test/exec';
 const lead={name:'  Тест  ',phone:' +79950000000 ',city:'Краснодар',form:'callback',page:'https://syntonik-krasnodar.ru/#dealer',consent:true};
@@ -130,35 +130,40 @@ test('MAX user address and independently disabled MAX channel',()=>{
   const disabled=scriptHarness({config:{MAX_ENABLED:'false'}});assert.equal(disabled.post().notifications.max,'disabled');assert.equal(disabled.calls.length,1);
 });
 test('maximum allowed lead fits both messenger limits with date intact',()=>{
-  const h=scriptHarness();const data=h.context.normalizeLead({...lead,name:'x'.repeat(80),phone:'x'.repeat(80),comment:'x'.repeat(1000),city:'x'.repeat(100),fuel:'x'.repeat(40),volume:'x'.repeat(40),page:'https://example.test/'+ 'x'.repeat(980),request_id:id,...Object.fromEntries(['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].map(k=>[k,'x'.repeat(200)]))});
+  const h=scriptHarness();const data=h.context.normalizeLead({...lead,name:'x'.repeat(80),phone:'+79991234567',comment:'x'.repeat(1000),city:'x'.repeat(100),fuel:'x'.repeat(40),volume:'x'.repeat(40),page:'https://example.test/'+ 'x'.repeat(980),request_id:id,...Object.fromEntries(['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].map(k=>[k,'x'.repeat(200)]))});
   data.timestamp='07.10.2026 15:00:00';const message=h.context.leadMessage(data);assert.ok(message.length<=4000);assert.ok(message.endsWith(data.timestamp));
 });
 
 const appSource=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
 function formHarness(send){
   const handlers={},button={disabled:false},status={textContent:''},note={hidden:false};
-  const control=(value='')=>({value,disabled:false,setCustomValidity(){},reportValidity:()=>true,addEventListener(){}});
-  const elements={name:control(' Тест '),phone:control(' +79950000000 '),city:control(' Краснодар '),fuel:control('petrol'),volume:control('250'),consent:control('on'),terms:control('on')};
-  const form={elements,dataset:{kind:'callback'},attributes:{},reportValidity:()=>true,
+  const control=(value='')=>({value,disabled:false,checked:true,attributes:{},handlers:{},validationMessage:'',textContent:'',hidden:false,
+    setCustomValidity(message){this.validationMessage=message;},reportValidity(){return !this.validationMessage;},addEventListener(name,handler){this.handlers[name]=handler;},
+    setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];},focus(){this.focused=true;}});
+  const elements={name:control(' Тест '),phone:control(' +79950000000 '),city:control(' Краснодар '),comment:control(''),fuel:control('petrol'),volume:control('250'),consent:control('on'),terms:control('on')};
+  const form={elements,dataset:{kind:'callback',testDrive:'false'},attributes:{},reportValidity:()=>!Object.values(elements).some(e=>e.validationMessage)&&elements.consent.checked&&(form.dataset.kind!=='order'||elements.terms.checked),
     querySelector:()=>button,addEventListener:(name,handler)=>handlers[name]=handler,
     setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];},
-    reset(){for(const field of ['name','phone','city'])elements[field].value='';}
+    reset(){for(const field of ['name','phone','city','comment'])elements[field].value='';}
   };
   const dialog={addEventListener(){},close(){},showModal(){}};
-  const targets={'#lead-dialog':dialog,'#lead-form':form,'#lead-setup-note':note,'#form-status':status,'#close-dialog':{addEventListener(){}}};
+  const fields={hidden:false},successView={hidden:true},error=control('');error.hidden=true;
+  const title=control(''),summary=control(''),price=control(''),choice=control('');
+  const targets={'#lead-dialog':dialog,'#lead-form':form,'#lead-setup-note':note,'#form-status':status,'#lead-fields':fields,'#lead-success':successView,'#lead-phone-error':error,'#dialog-title':title,'#lead-order-summary':choice,'#lead-product-summary':summary,'#lead-price-summary':price,'#lead-payment-note':control(''),'#lead-comment':control(''),'#terms-label':control(''),'#close-dialog':control(''),'#close-lead-success':control('')};
   const context={document:{querySelector:s=>targets[s],addEventListener(){}},window:{location:{href:'https://example.test/'}},LEAD_ENDPOINT:endpoint,
-    createLeadSubmitter:()=>send,sessionUtms:{utm_source:'test'},fuels:[{id:'petrol',name:'Бензин'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
-    FormData:class{constructor(form){this.form=form;}get(field){return this.form.elements[field]?.value??null;}}
+    createLeadSubmitter:()=>send,normaliseRuMobile,sessionUtms:{utm_source:'test'},selectedFuel:{id:'petrol'},fuels:[{id:'petrol',name:'Бензин'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
+    FormData:class{constructor(form){this.values=Object.fromEntries(Object.entries(form.elements).map(([k,e])=>[k,((k==='consent'||k==='terms')&&!e.checked)?null:e.value]));}get(field){return this.values[field]??null;}}
   };
   vm.createContext(context);vm.runInContext(appSource.slice(appSource.indexOf("const dialog=document.querySelector('#lead-dialog')")),context);
-  return {form,button,status,note,submit:()=>handlers.submit({preventDefault(){}})};
+  return {form,button,status,note,fields,successView,error,title,summary,price,choice,context,open:(...args)=>context.openForm(...args),submit:()=>handlers.submit({preventDefault(){}})};
 }
+
 test('existing form blocks double clicks, shows sending, resets on success and unlocks',async()=>{
   let done,calls=0,payload;
   const h=formHarness(data=>{calls++;payload=data;return new Promise(resolve=>done=resolve);});
   const first=h.submit();await h.submit();assert.equal(calls,1);assert.equal(h.button.disabled,true);assert.equal(h.form.attributes['aria-busy'],'true');assert.equal(h.status.textContent,'Отправляем заявку…');
   assert.equal(payload.city,'Краснодар');assert.equal(payload.form,'callback');assert.equal(payload.fuel,'');assert.equal(payload.utm_source,'test');
-  done({success:true});await first;assert.equal(h.form.elements.name.value,'');assert.equal(h.button.disabled,false);assert.equal(h.status.textContent,'Спасибо! Заявка отправлена.');assert.equal(h.note.hidden,true);
+  done({success:true});await first;assert.equal(h.form.elements.name.value,'');assert.equal(h.button.disabled,false);assert.equal(h.title.textContent,'Заявка отправлена!');assert.equal(h.successView.hidden,false);assert.equal(h.fields.hidden,true);assert.equal(h.note.hidden,true);
 });
 test('existing form preserves entered data on failure and passes selected order fields',async()=>{
   let payload;const h=formHarness(data=>{payload=data;throw Error('network');});h.form.dataset.kind='order';
@@ -183,5 +188,33 @@ test('TEST DRIVE uses the existing order route and preserves the 12-column Sheet
   assert.equal(backend.rows.length,2);assert.equal(backend.rows[1].length,12);assert.ok(backend.rows[1][3].includes(payload.comment));assert.ok(backend.rows[1][3].includes('Объём: 15 мл'));
   assert.equal(backend.calls.length,1);assert.match(backend.calls[0].url,/api.telegram.org/);
   assert.ok(JSON.parse(backend.calls[0].options.payload).text.includes('Syntonik TEST DRIVE'));
-  assert.equal(form.status.textContent,'Спасибо! Заявка отправлена.');
+  assert.equal(form.title.textContent,'Заявка отправлена!');assert.equal(form.successView.hidden,false);
+});
+
+const validPhones=['+7 999 123-45-67','7 (999) 123-45-67','8 (999) 123-45-67','89991234567','79991234567','9991234567','+7 (999) 123 45 67','  +7\u00a0999\u202f123-45-67  '];
+const invalidPhones=['999123456','8999123456','+7999123456','+799912345678','+78001234567','+358401234567','999abc1234567','+89991234567','7+9991234567','++79991234567','999/1234567','999.1234567','9991234567x','+79991234567\n','999\t1234567','','   ',null,79991234567,'+79991234567'+' '.repeat(80)+'1'];
+test('all supported RU mobile inputs normalise identically on the client and Apps Script',async()=>{
+  for(const phone of validPhones){assert.equal(normaliseRuMobile(phone),'+79991234567');const h=scriptHarness({config:{MAX_ENABLED:'false'}});assert.equal(h.context.normaliseRuMobile(phone),'+79991234567');assert.equal(h.post({phone}).success,true);assert.equal(h.rows[1][2],"'+79991234567");assert.ok(JSON.parse(h.calls[0].options.payload).text.includes('+79991234567'));
+    let payload;await createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(_,options)=>{payload=JSON.parse(options.body);return success();}})({...lead,phone});assert.equal(payload.phone,'+79991234567');}
+});
+test('incomplete, non-mobile, foreign, extra-digit and malformed phones never reach either transport',()=>{
+  let requests=0;const submit=createLeadSubmitter(endpoint,{fetcher:()=>requests++});
+  for(const phone of invalidPhones){assert.equal(normaliseRuMobile(phone),null);assert.throws(()=>submit({...lead,phone}));const h=scriptHarness();assert.equal(h.post({phone}).success,false);assert.equal(h.rows.length,0);assert.equal(h.calls.length,0);}
+  assert.equal(requests,0);
+});
+test('form validation blocks incomplete phones even before native HTML validation; error clears on correction',async()=>{
+  let calls=0;const h=formHarness(()=>calls++);h.form.reportValidity=()=>true;h.form.elements.phone.value='8999123456';await h.submit();assert.equal(calls,0);assert.equal(h.error.hidden,false);assert.equal(h.form.elements.phone.attributes['aria-invalid'],'true');assert.equal(h.form.elements.phone.value,'8999123456');assert.ok(h.form.elements.phone.focused);
+  h.form.elements.phone.value='8 (999) 123-45-67';h.form.elements.phone.handlers.input();assert.equal(h.error.hidden,true);assert.equal(h.form.elements.phone.attributes['aria-invalid'],undefined);
+});
+test('city is optional, comment survives failure and canonical phone is the only submitted phone',async()=>{
+  let payload;const h=formHarness(data=>{payload=data;throw Error('network');});h.form.elements.city.value='';h.form.elements.comment.value='Вопрос о доставке';h.form.elements.phone.value='9991234567';await h.submit();assert.equal(payload.city,'');assert.equal(payload.phone,'+79991234567');assert.equal(payload.comment,'Вопрос о доставке');assert.equal(h.form.elements.comment.value,'Вопрос о доставке');assert.equal(h.fields.hidden,false);assert.equal(h.successView.hidden,true);
+});
+test('visible product summary uses catalog prices; callback clears all product and price displays',()=>{
+  const h=formHarness(()=>{});h.open('order','petrol','250');assert.equal(h.title.textContent,'Оформить заявку');assert.equal(h.summary.textContent,'Syntonik · Бензин · 250 мл');assert.equal(h.price.textContent,'7100');h.open('order','petrol','250',true);assert.equal(h.summary.textContent,'Syntonik TEST DRIVE · 15 мл');assert.equal(h.price.textContent,'690');assert.equal(h.form.elements.volume.value,'15');h.open('callback');assert.equal(h.title.textContent,'Заказать обратный звонок');assert.equal(h.choice.hidden,true);assert.equal(h.summary.textContent,'');assert.equal(h.price.textContent,'');assert.equal(h.form.elements.volume.disabled,true);assert.equal(h.form.elements.terms.required,false);
+});
+test('unconfirmed server result keeps fields and does not show success; confirmed result blocks a second submit',async()=>{
+  let confirmed=false,calls=0;const h=formHarness(async()=>{calls++;return {success:confirmed};});await h.submit();assert.equal(h.successView.hidden,true);assert.equal(h.form.elements.name.value,'Тест');confirmed=true;await h.submit();assert.equal(h.successView.hidden,false);await h.submit();assert.equal(calls,2);
+});
+test('consent and order terms remain mandatory in the form and shared submitter',async()=>{
+  let calls=0;const h=formHarness(()=>calls++);h.form.elements.consent.checked=false;await h.submit();h.form.elements.consent.checked=true;h.form.dataset.kind='order';h.form.elements.terms.checked=false;await h.submit();assert.equal(calls,0);const submit=createLeadSubmitter(endpoint,{fetcher:()=>calls++});assert.throws(()=>submit({...lead,form:'order',terms:false}));assert.equal(calls,0);
 });
