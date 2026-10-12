@@ -227,3 +227,64 @@
  .documents-bottom .document-actions { padding-top:0; gap:0 12px; }
  .documents-bottom .document-actions a { padding:0; min-width:44px; border:0; border-radius:0; background:transparent; color:var(--green); font-size:13px; gap:6px; }
 }
+
+/* Horizontal layout for the existing calculator only. */
+.calculator-section { display:block; }
+.calculator-section .calculator-copy h2 { font-size:clamp(32px,3.6vw,58px); letter-spacing:-2px; line-height:1.08; white-space:normal; margin:0 0 10px; }
+.calculator-section .calculator-copy .section-lead { max-width:none; margin:0 0 24px; }
+.calculator-section .calculator-panel { display:grid; grid-template-columns:1.1fr .9fr; align-items:start; gap:22px 28px; width:100%; max-width:none; padding:24px 28px; margin:0; }
+.calculator-section .calculator-inputs,.calculator-section .calculator-output,.calculator-section .consultation-button span { line-height:1; }
+.calculator-section .calculator-footer { min-width:0; }
+.calculator-section .calculator-output { border-left:1px solid #dce1dd; padding-left:28px; }
+.calculator-section .fuel-switch { gap:8px; margin-bottom:18px; }
+.calculator-section .fuel-switch button { min-height:44px; font-size:16px; padding:8px; }
+.calculator-section #calculator-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 16px; }
+.calculator-section #calculator-form>label { display:flex; flex-direction:column; align-items:stretch; justify-content:start; gap:8px; margin:0; font-size:15px; line-height:1.35; min-width:0; }
+.calculator-section #calculator-form input[type=number] { width:100%; min-height:48px; padding:10px 12px; font-size:20px; }
+.calculator-section #calculator-form fieldset { display:block; min-width:0; margin:0; padding:0; }
+.calculator-section #calculator-form legend { float:none; width:100%; margin:0 0 8px; padding:0; font-size:15px; line-height:1.35; }
+.calculator-section #calculator-form .scenarios { display:flex; gap:8px; flex-wrap:wrap; }
+.calculator-section #calculator-form .scenarios label { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:44px; min-height:44px; font-size:15px; padding:0; margin:0; }
+.calculator-section #calculator-form input[type=radio] { width:18px; height:18px; margin:0; }
+.calculator-section .net-savings { border-top:0; padding-top:0; }
+.calculator-section .net-savings .money { font-size:clamp(44px,4.4vw,70px); }
+.calculator-section .net-savings .period { font-size:16px; }
+.calculator-section .consultation-button { min-height:48px; padding:12px; margin-top:18px; }
+.calculator-section .calculator-footer { grid-column:1/-1; border-top:1px solid #dce1dd; }
+.calculator-section .calc-details { margin:0; border-top:0; }
+.calculator-section .calc-details summary { min-height:44px; padding:12px 0; }
+.calculator-section .calc-details dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px; }
+.calculator-section .small-note { margin:4px 0 0; }
+@media(max-width:1100px) {
+ .calculator-section .calculator-panel { padding:22px; gap:20px; }
+ .calculator-section .calculator-output { padding-left:20px; }
+ .calculator-section #calculator-form { gap:16px 12px; }
+ .calculator-section #calculator-form>label,.calculator-section #calculator-form legend { font-size:14px; }
+}
+@media(max-width:900px) {
+ .calculator-section .calculator-panel { grid-template-columns:1fr; }
+ .calculator-section .calculator-output { border-left:0; border-top:1px solid #dce1dd; padding:20px 0 0; }
+ .calculator-section .calculator-footer { grid-column:auto; }
+}
+@media(max-width:700px) {
+ .calculator-section .calculator-copy h2 { font-size:clamp(30px,7.5vw,46px); letter-spacing:-1px; margin-bottom:10px; }
+ .calculator-section .calculator-copy .section-lead { font-size:16px; margin-bottom:18px; }
+ .calculator-section .calculator-panel { padding:18px 16px; gap:18px; }
+ .calculator-section .fuel-switch { gap:6px; margin-bottom:16px; }
+ .calculator-section .fuel-switch button { font-size:14px; padding:8px 3px; }
+ .calculator-section #calculator-form { gap:16px 12px; }
+ .calculator-section #calculator-form>label>span,.calculator-section #calculator-form legend { min-height:38px; }
+ .calculator-section #calculator-form .scenarios { gap:4px; flex-wrap:nowrap; }
+ .calculator-section #calculator-form .scenarios label { font-size:14px; min-height:48px; }
+ .calculator-section #calculator-form input[type=radio] { width:16px; height:16px; }
+ .calculator-section .net-savings .money { font-size:46px; }
+ .calculator-section .net-savings .period { font-size:15px; }
+ .calculator-section .consultation-button { font-size:16px; }
+ .calculator-section .calc-details dl { grid-template-columns:1fr; }
+}
+@media(max-width:380px) {
+ .calculator-section #calculator-form { grid-template-columns:1fr; gap:14px; }
+ .calculator-section #calculator-form>label>span,.calculator-section #calculator-form legend { min-height:0; }
+ .calculator-section #calculator-form .scenarios { gap:18px; }
+ .calculator-section .net-savings .money { font-size:42px; }
+}
