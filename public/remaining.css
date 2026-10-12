@@ -314,7 +314,7 @@
 @media(max-width:700px) {
  .catalog-section.remaining { padding:20px 5%; }
  .catalog-section h2 { font-size:clamp(26px,7.8vw,38px); letter-spacing:-1px; margin:0 0 8px; }
- .catalog-section .section-lead { font-size:16px; margin-bottom:10px; }
+ .catalog-section .section-lead { font-size:clamp(10px,3.05vw,16px); white-space:nowrap; margin-bottom:10px; }
  .catalog-section .fuel-switch { gap:6px; margin-bottom:12px; }
  .catalog-section .fuel-switch button { font-size:14px; padding:8px 3px; }
  .catalog-section .product-grid { display:flex; gap:12px; padding:2px 0 8px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
