@@ -290,43 +290,47 @@
 }
 
 /* Compact catalog with native mobile product scrolling. */
+.catalog-section.remaining { padding-top:32px; padding-bottom:32px; }
 .catalog-section h2 { font-size:clamp(34px,3.8vw,60px); margin:0 0 12px; }
-.catalog-section .section-lead { margin-bottom:20px; }
-.catalog-section .fuel-switch { margin-bottom:20px; }
+.catalog-section .section-lead { margin-bottom:14px; }
+.catalog-section .fuel-switch { margin-bottom:14px; }
 .catalog-section .fuel-switch button { min-height:44px; }
 .catalog-section .product-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
-.catalog-section .product { min-width:0; padding:12px 14px 14px; }
-.catalog-section .product-photo { height:220px; overflow:visible; }
-.catalog-section .product-photo img { width:100%; height:calc(var(--photo-height) * .65); max-height:220px; object-fit:contain; object-position:center bottom; }
-.catalog-section .product h3 { font-size:26px; margin:6px 0 4px; }
-.catalog-section .product .fuel-capacity { min-height:40px; font-size:14px; line-height:1.4; margin:0 0 8px; }
-.catalog-section .product .product-price { font-size:26px; padding-top:8px; margin:0 0 10px; white-space:nowrap; }
+.catalog-section .product { min-width:0; padding:10px 14px 12px; }
+.catalog-section .product-photo { height:190px; overflow:visible; }
+.catalog-section .product-photo img { width:100%; height:calc(var(--photo-height) * .8); max-height:190px; object-fit:contain; object-position:center bottom; mix-blend-mode:normal; }
+.catalog-section .product h3 { font-size:26px; margin:3px 0 2px; }
+.catalog-section .product .fuel-capacity { min-height:20px; font-size:14px; line-height:1.4; margin:0 0 5px; }
+.catalog-section .product .product-price { font-size:26px; padding-top:6px; margin:0 0 6px; white-space:nowrap; }
 .catalog-section .product button { min-height:44px; font-size:16px; padding:8px; }
-.catalog-section .catalog-delivery { margin:16px 0 0; font-size:14px; line-height:1.4; color:#56625a; text-align:center; }
+.catalog-section .catalog-delivery { margin:10px 0 0; font-size:14px; line-height:1.4; color:#56625a; text-align:center; }
 .catalog-section .product-grid:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+@media(max-width:1200px) and (min-width:701px) {
+ .catalog-section .product .fuel-capacity { min-height:40px; }
+}
 @media(max-width:1000px) and (min-width:701px) {
  .catalog-section .product-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media(max-width:700px) {
- .catalog-section.remaining { padding:28px 5%; }
- .catalog-section h2 { font-size:clamp(30px,8vw,42px); letter-spacing:-1px; margin:0 0 10px; }
- .catalog-section .section-lead { font-size:16px; margin-bottom:16px; }
- .catalog-section .fuel-switch { gap:6px; margin-bottom:16px; }
+ .catalog-section.remaining { padding:20px 5%; }
+ .catalog-section h2 { font-size:clamp(26px,7.8vw,38px); letter-spacing:-1px; margin:0 0 8px; }
+ .catalog-section .section-lead { font-size:16px; margin-bottom:10px; }
+ .catalog-section .fuel-switch { gap:6px; margin-bottom:12px; }
  .catalog-section .fuel-switch button { font-size:14px; padding:8px 3px; }
  .catalog-section .product-grid { display:flex; gap:12px; padding:2px 0 8px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
  .catalog-section .product-grid::-webkit-scrollbar { display:none; }
  .catalog-section .product-grid::after { content:''; flex:0 0 calc(10% - 12px); }
- .catalog-section .product,.catalog-section .product:last-child { flex:0 0 90%; max-width:none; width:auto; grid-column:auto; padding:12px 16px 14px; scroll-snap-align:start; scroll-snap-stop:always; }
- .catalog-section .product-photo { height:180px; }
- .catalog-section .product-photo img { height:calc(var(--photo-height) * .53); max-height:180px; }
+ .catalog-section .product,.catalog-section .product:last-child { flex:0 0 90%; max-width:none; width:auto; grid-column:auto; padding:10px 14px 12px; scroll-snap-align:start; scroll-snap-stop:always; }
+ .catalog-section .product-photo { height:150px; }
+ .catalog-section .product-photo img { max-height:150px; }
  .catalog-section .product h3 { font-size:26px; }
  .catalog-section .product .fuel-capacity { min-height:0; font-size:14px; }
  .catalog-section .product .product-price { font-size:26px; }
  .catalog-section .product button { font-size:16px; }
- .catalog-section .catalog-controls:not([hidden]) { display:flex; justify-content:center; align-items:center; gap:16px; margin-top:6px; }
+ .catalog-section .catalog-controls:not([hidden]) { display:flex; justify-content:center; align-items:center; gap:16px; margin-top:2px; }
  .catalog-section .catalog-controls button { width:44px; height:44px; padding:0; font-size:24px; line-height:1; }
  .catalog-section .catalog-controls button:disabled { opacity:.35; cursor:default; }
  .catalog-section .catalog-controls button:disabled:hover { background:white; }
  .catalog-section #catalog-position { min-width:58px; text-align:center; font-size:14px; color:#56625a; }
- .catalog-section .catalog-delivery { font-size:13px; margin-top:12px; }
+ .catalog-section .catalog-delivery { font-size:13px; margin-top:8px; }
 }
