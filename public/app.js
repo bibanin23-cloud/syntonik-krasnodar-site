@@ -216,6 +216,10 @@ document.addEventListener('click',event=>{
   if(fuelButton){selectedFuel=fuels.find(f=>f.id===fuelButton.dataset.fuel);renderCatalog();document.querySelector(`#fuel-tabs [data-fuel="${selectedFuel.id}"]`).focus();}
   const calcFuelButton=event.target.closest('[data-calc-fuel]');
   if(calcFuelButton){calculatorFuel=fuels.find(f=>f.id===calcFuelButton.dataset.calcFuel);renderCalculatorTabs();document.querySelector(`[data-calc-fuel="${calculatorFuel.id}"]`).focus();}
+  if(event.target.closest('[data-catalog]')){
+    if(location.hash!=='#catalog')location.hash='catalog';
+    else document.querySelector('#catalog').scrollIntoView({behavior:'smooth',block:'start'});
+  }
   const order=event.target.closest('[data-order]');if(order)openForm('order',order.dataset.fuel,order.dataset.volume,order.hasAttribute('data-test-drive'));
   if(event.target.closest('[data-callback]'))openForm('callback');
 });
