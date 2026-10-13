@@ -30,6 +30,17 @@ export function renderCases(html){
   return html.replace('<!-- CASE_CARDS -->',renderCaseCards()).replace('<!-- CASE_POSITION -->',`1 из ${cases.length}`);
 }
 
+export function renderBlogPublication(html,datePublished=null){
+  if(!datePublished)return html.replace('<!-- BLOG_PUBLICATION_DATE -->','');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(datePublished)||new Date(datePublished+'T12:00:00Z').toISOString().slice(0,10)!==datePublished)throw new Error('Invalid blog publication date');
+  const label=new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Moscow'}).format(new Date(datePublished+'T12:00:00Z'));
+  html=html.replace('<!-- BLOG_PUBLICATION_DATE -->',`<time class="blog-publication-date" datetime="${datePublished}">${label}</time>`);
+  return html.replace(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,(_,json)=>{
+    const data=JSON.parse(json);for(const item of data['@graph']||[]){if(item['@type']==='BlogPosting'){item.datePublished=datePublished;item.dateModified=datePublished;}}
+    return `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
+  });
+}
+
 export async function build({basePath='',siteUrl='',indexable=false,optimizeImages=false,outDir=path.join(project,'dist')}={}){
   if(!/^(?:\/[a-zA-Z0-9_-]+)*\/?$/.test(basePath))throw new Error('Invalid base path');
   const base=basePath==='/'?'':basePath.replace(/\/$/,'');
@@ -37,6 +48,8 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
   const output=path.resolve(outDir);
   if(output===source||source.startsWith(output+path.sep)||!output.startsWith(project+path.sep))throw new Error('Build output must be a separate directory inside the project');
   const files=await walk(source);
+  const publication=JSON.parse(await readFile(path.join(source,'blog/publication.json'),'utf8'));
+  const blogPaths=files.filter(file=>file.startsWith(path.join(source,'blog')+path.sep)&&path.basename(file)==='index.html').map(file=>path.relative(source,file).replaceAll('\\','/').replace(/index\.html$/,''));
   await rm(output,{recursive:true,force:true});
   await mkdir(output,{recursive:true});
   const sharp=optimizeImages?require(process.env.SHARP_MODULE||'sharp'):null;
@@ -61,9 +74,12 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
         const title=text.match(/<title>([\s\S]*?)<\/title>/)?.[1]||'Syntonik Краснодар';
         const description=text.match(/<meta name="description" content="([^"]*)"/)?.[1]||'Syntonik в Краснодаре — ЭнерДар.';
         if(indexable&&relative==='index.html')text=text.replace('content="noindex,nofollow"','content="index,follow"');
+        if(relative.startsWith('blog/'))text=renderBlogPublication(text,relative==='blog/index.html'||'/'+relative.replace(/index\.html$/,'')===publication.article?publication.datePublished:null);
         const origin=siteUrl?new URL(siteUrl).origin:canonical.slice(0,-1);
         const image=origin+base+'/assets/backgrounds/hero-scene-v4.'+(optimizeImages?'webp':'png');
-        text=text.replace('</head>',`<link rel="icon" type="image/svg+xml" href="${base}/assets/brand/syntonik-black.svg"><meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="Syntonik Краснодар — ЭнерДар"><meta property="og:title" content="${title.replaceAll('"','&quot;')}"><meta property="og:description" content="${description}"><meta property="og:url" content="${canonical}${relative==='index.html'?'':relative.replace(/index\.html$/,'')}"><meta property="og:image" content="${image}"></head>`);
+        let headExtras=text.includes('rel="icon"')?'':`<link rel="icon" type="image/svg+xml" href="${base}/assets/brand/syntonik-black.svg">`;
+        if(!text.includes('property="og:type"'))headExtras+=`<meta property="og:type" content="website"><meta property="og:locale" content="ru_RU"><meta property="og:site_name" content="Syntonik Краснодар — ЭнерДар"><meta property="og:title" content="${title.replaceAll('"','&quot;')}"><meta property="og:description" content="${description}"><meta property="og:url" content="${canonical}${relative==='index.html'?'':relative.replace(/index\.html$/,'')}"><meta property="og:image" content="${image}">`;
+        text=text.replace('</head>',headExtras+'</head>');
       }
       contents=Buffer.from(text);
     }
@@ -73,7 +89,7 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
   }
   await writeFile(path.join(output,'.nojekyll'),'');
   await writeFile(path.join(output,'robots.txt'),indexable?`User-agent: *\nAllow: /\nDisallow: /legal/\nDisallow: /blog/\nSitemap: ${canonical}sitemap.xml\n`:'User-agent: *\nDisallow: /\n');
-  await writeFile(path.join(output,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${canonical}</loc></url></urlset>\n`);
+  await writeFile(path.join(output,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${canonical}</loc></url>${blogPaths.map(p=>`<url><loc>${canonical}${p}</loc>${publication.datePublished&&(p==='blog/'||'/'+p===publication.article)?`<lastmod>${publication.datePublished}</lastmod>`:''}</url>`).join('')}</urlset>\n`);
   await writeFile(path.join(output,'404.html'),`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Страница не найдена — Syntonik</title><link rel="stylesheet" href="${base}/styles.css"></head><body><main style="padding:5%"><h1>Страница не найдена</h1><a href="${base}/">Перейти на главную</a></main></body></html>`);
   // Check static references again after rewriting and optimization.
   for(const file of (await walk(output)).filter(file=>/\.(html|css|js)$/.test(file))){

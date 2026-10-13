@@ -41,13 +41,17 @@ test('preview build resolves repository paths without changing approved content'
     assert.match(await readFile(outDir+'robots.txt','utf8'),/Disallow: \//);
   }finally{await rm(outDir,{recursive:true,force:true});}
 });
-test('indexing opens only on the primary domain; legal pages and blog stay noindex',async()=>{
+test('indexing opens only on the primary domain; legal pages stay noindex and blog pages are indexable',async()=>{
   await assert.rejects(build({basePath:'/site',siteUrl:'https://syntonik-krasnodar.ru/',indexable:true,outDir}));
   await assert.rejects(build({siteUrl:'https://example.com/',indexable:true,outDir}));
   try{
     await build({siteUrl:'https://syntonik-krasnodar.ru/',indexable:true,outDir});
     assert.match(await readFile(outDir+'index.html','utf8'),/content="index,follow"/);
     assert.match(await readFile(outDir+'legal/privacy/index.html','utf8'),/noindex/);
+    assert.match(await readFile(outDir+'blog/index.html','utf8'),/content="index,follow"/);
+    const article=await readFile(outDir+'blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html','utf8');
+    assert.match(article,/content="index,follow"/);assert.equal((article.match(/property="og:type"/g)||[]).length,1);
+    assert.match(await readFile(outDir+'sitemap.xml','utf8'),/https:\/\/syntonik-krasnodar\.ru\/blog\/bezopasen-li-syntonik-dlya-dvigatelya\//);
     assert.match(await readFile(outDir+'robots.txt','utf8'),/Sitemap: https:\/\/syntonik-krasnodar.ru\/sitemap.xml/);
   }finally{await rm(outDir,{recursive:true,force:true});}
 });
