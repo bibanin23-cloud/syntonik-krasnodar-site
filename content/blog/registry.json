@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "fuel-consumption",
+      "slug": "rashod-topliva",
+      "title": "Расход топлива"
+    },
+    {
+      "id": "engine",
+      "slug": "dvigatel-i-toplivnaya-sistema",
+      "title": "Двигатель и топливная система"
+    },
+    {
+      "id": "fuel-quality",
+      "slug": "kachestvo-topliva",
+      "title": "Качество топлива"
+    },
+    {
+      "id": "research",
+      "slug": "tehnologii-i-issledovaniya",
+      "title": "Технологии и исследования"
+    }
+  ],
+  "authors": {
+    "igor": {
+      "name": "Игорь Бибанин",
+      "byline": "Автор: Игорь Бибанин, инженер-механик, руководитель компании «ЭнерДар»",
+      "jobTitle": "Инженер-механик",
+      "company": "ЭнерДар",
+      "companyRole": "Руководитель компании «ЭнерДар»",
+      "photo": "/assets/dealer/igor.jpeg"
+    }
+  },
+  "posts": [
+    {
+      "slug": "bezopasen-li-syntonik-dlya-dvigatelya",
+      "title": "Безопасен ли Syntonik для двигателя? Инженерный разбор состава, испытаний и реального опыта",
+      "seoTitle": "Безопасен ли Syntonik для двигателя — разбор инженера и отзывы",
+      "description": "Безопасен ли Syntonik для двигателя и форсунок? Анализ состава, лабораторных испытаний и видеоотзыв со снижением расхода топлива на 30%.",
+      "excerpt": "Безопасен ли Syntonik для двигателя и форсунок? Анализ состава, лабораторных испытаний и видеоотзыв со снижением расхода топлива на 30%.",
+      "category": "research",
+      "author": "igor",
+      "datePublished": null,
+      "dateModified": null,
+      "status": "draft",
+      "featured": true,
+      "cover": "/assets/cars/touareg-cutout-v1.png",
+      "coverAlt": "Volkswagen Touareg, 2008 год — автомобиль из видеоотзыва о Syntonik",
+      "summary": "Главный вывод: при соблюдении рекомендованной дозировки анализ раскрытого состава Syntonik не выявляет очевидных химических предпосылок для интенсивного агрессивного воздействия на исправную топливную систему и двигатель.",
+      "content": {
+        "format": "legacy-html",
+        "file": "public/blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html",
+        "sha256": "3469422b747923d5d671bafd1b5cb67eb5df7b0797155aa5fceebaad42533791"
+      },
+      "related": [],
+      "documents": [
+        "/assets/documents/certificate.pdf",
+        "/assets/documents/petrol-test.pdf",
+        "/assets/documents/diesel-test.pdf",
+        "/assets/documents/safety-passport.pdf",
+        "/assets/documents/safety-explanation.pdf"
+      ],
+      "videoCaseId": "touareg",
+      "consultation": {
+        "title": "Узнайте, подходит ли Syntonik вашему автомобилю",
+        "inlineAfter": "composition",
+        "conclusionSection": "conclusion",
+        "existingFinal": true
+      }
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {cases,caseVideoEmbedUrl} from '../public/data/cases.js';
+import {renderBlog} from './blog.mjs';
 
 const project=path.resolve(fileURLToPath(new URL('../',import.meta.url)));
 const source=path.join(project,'public');
@@ -48,16 +49,18 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
   const output=path.resolve(outDir);
   if(output===source||source.startsWith(output+path.sep)||!output.startsWith(project+path.sep))throw new Error('Build output must be a separate directory inside the project');
   const files=await walk(source);
-  const publication=JSON.parse(await readFile(path.join(source,'blog/publication.json'),'utf8'));
-  const blogPaths=files.filter(file=>file.startsWith(path.join(source,'blog')+path.sep)&&path.basename(file)==='index.html').map(file=>path.relative(source,file).replaceAll('\\','/').replace(/index\.html$/,''));
+  const blog=await renderBlog({includeDrafts:!indexable,indexable});
+  const managedBlogSources=new Set(['blog/index.html','blog/publication.json',...blog.registry.posts.filter(p=>p.content.format==='legacy-html').map(p=>p.content.file.replace(/^public\//,''))]);
   await rm(output,{recursive:true,force:true});
   await mkdir(output,{recursive:true});
   const sharp=optimizeImages?require(process.env.SHARP_MODULE||'sharp'):null;
   let originalImageBytes=0,optimizedImageBytes=0;
   // Files are rewritten only in the generated site. Approved originals stay intact.
-  for(const file of files){
-    let relative=path.relative(source,file).replaceAll('\\','/');
-    let contents=await readFile(file);
+  const inputs=files.map(file=>({file,relative:path.relative(source,file).replaceAll('\\','/')})).filter(item=>!managedBlogSources.has(item.relative));
+  inputs.push(...[...blog.pages].map(([url,html])=>({file:url+'index.html',relative:url.slice(1)+'index.html',html})));
+  for(const {file,relative:inputRelative,html} of inputs){
+    let relative=inputRelative;
+    let contents=html===undefined?await readFile(file):Buffer.from(html);
     if(optimizeImages&&/\.png$/i.test(file)){
       originalImageBytes+=contents.length;
       contents=await sharp(contents).webp({lossless:true,effort:6}).toBuffer();
@@ -74,7 +77,6 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
         const title=text.match(/<title>([\s\S]*?)<\/title>/)?.[1]||'Syntonik Краснодар';
         const description=text.match(/<meta name="description" content="([^"]*)"/)?.[1]||'Syntonik в Краснодаре — ЭнерДар.';
         if(indexable&&relative==='index.html')text=text.replace('content="noindex,nofollow"','content="index,follow"');
-        if(relative.startsWith('blog/'))text=renderBlogPublication(text,relative==='blog/index.html'||'/'+relative.replace(/index\.html$/,'')===publication.article?publication.datePublished:null);
         const origin=siteUrl?new URL(siteUrl).origin:canonical.slice(0,-1);
         const image=origin+base+'/assets/backgrounds/hero-scene-v4.'+(optimizeImages?'webp':'png');
         let headExtras=text.includes('rel="icon"')?'':`<link rel="icon" type="image/svg+xml" href="${base}/assets/brand/syntonik-black.svg">`;
@@ -88,8 +90,8 @@ export async function build({basePath='',siteUrl='',indexable=false,optimizeImag
     await writeFile(target,contents);
   }
   await writeFile(path.join(output,'.nojekyll'),'');
-  await writeFile(path.join(output,'robots.txt'),indexable?`User-agent: *\nAllow: /\nDisallow: /legal/\nDisallow: /blog/\nSitemap: ${canonical}sitemap.xml\n`:'User-agent: *\nDisallow: /\n');
-  await writeFile(path.join(output,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${canonical}</loc></url>${blogPaths.map(p=>`<url><loc>${canonical}${p}</loc>${publication.datePublished&&(p==='blog/'||'/'+p===publication.article)?`<lastmod>${publication.datePublished}</lastmod>`:''}</url>`).join('')}</urlset>\n`);
+  await writeFile(path.join(output,'robots.txt'),indexable?`User-agent: *\nAllow: /\nDisallow: /legal/\nSitemap: ${canonical}sitemap.xml\n`:'User-agent: *\nDisallow: /\n');
+  await writeFile(path.join(output,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${canonical}</loc></url>${blog.sitemap.map(p=>`<url><loc>${canonical}${p.url.slice(1)}</loc>${p.lastmod?`<lastmod>${p.lastmod}</lastmod>`:''}</url>`).join('')}</urlset>\n`);
   await writeFile(path.join(output,'404.html'),`<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Страница не найдена — Syntonik</title><link rel="stylesheet" href="${base}/styles.css"></head><body><main style="padding:5%"><h1>Страница не найдена</h1><a href="${base}/">Перейти на главную</a></main></body></html>`);
   // Check static references again after rewriting and optimization.
   for(const file of (await walk(output)).filter(file=>/\.(html|css|js)$/.test(file))){

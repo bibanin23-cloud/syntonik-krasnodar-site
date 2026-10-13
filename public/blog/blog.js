@@ -3,6 +3,10 @@ import {LEAD_ENDPOINT} from '/lead-config.js';
 import {cases,caseVideoEmbedUrl} from '/data/cases.js';
 
 document.querySelector('.blog-toc details')?.toggleAttribute('open',!matchMedia('(max-width:900px)').matches);
+const menu=document.querySelector('.blog-menu'),mobileMenu=matchMedia('(max-width:600px)');
+function updateMenu(){if(menu)menu.open=!mobileMenu.matches;}
+updateMenu();mobileMenu.addEventListener('change',updateMenu);
+menu?.querySelector('nav').addEventListener('click',event=>{if(mobileMenu.matches&&event.target.closest('a'))menu.open=false;});
 
 // The same counter and goal names as the existing site. No personal fields in events.
 if(!window.ym){

@@ -2,7 +2,8 @@ import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {renderCases,renderBlogPublication} from './build.mjs';
+import {renderCases} from './build.mjs';
+import {renderBlog} from './blog.mjs';
 const root=process.env.SITE_ROOT?path.resolve(process.env.SITE_ROOT):fileURLToPath(new URL('../public/',import.meta.url));
 const base=(process.env.BASE_PATH||'').replace(/\/$/,'');
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.avif':'image/avif','.jpg':'image/jpeg','.jpeg':'image/jpeg','.jfif':'image/jpeg','.pdf':'application/pdf','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8'};
@@ -15,13 +16,24 @@ export const server=http.createServer(async(req,res)=>{
       if(!pathname.startsWith(base+'/')){res.writeHead(404);res.end();return;}
       pathname=pathname.slice(base.length);
     }
+    if(pathname==='/blog'||(pathname.startsWith('/blog/')&&pathname.endsWith('/index.html'))){res.writeHead(301,{Location:base+(pathname==='/blog'?'/blog/':pathname.slice(0,-10))});res.end();return;}
     let file=path.resolve(root,'.'+pathname);
     if(file!==path.resolve(root)&&!file.startsWith(path.resolve(root)+path.sep)){res.writeHead(403);res.end();return;}
-    if((await stat(file)).isDirectory())file=path.join(file,'index.html');
-    let body=await readFile(file);
+    const sourcePreview=!process.env.SITE_ROOT;
+    const pagePath=pathname.replace(/index\.html$/,'');
+    let body;
+    if(sourcePreview&&pathname.startsWith('/blog/')&&(pagePath.endsWith('/')||!path.extname(pagePath))){
+      const route=pagePath.endsWith('/')?pagePath:pagePath+'/';
+      const blog=await renderBlog({includeDrafts:true});
+      if(!blog.pages.has(route))throw new Error('Unknown blog page');
+      if(route!==pagePath){res.writeHead(301,{Location:base+route});res.end();return;}
+      body=Buffer.from(blog.pages.get(route));file=path.join(file,'index.html');
+    }else{
+      if((await stat(file)).isDirectory())file=path.join(file,'index.html');
+      body=await readFile(file);
+    }
     if(file===path.join(root,'index.html')&&path.resolve(root)===fileURLToPath(new URL('../public/',import.meta.url)).replace(/[\\/]$/,''))body=Buffer.from(renderCases(body.toString('utf8')));
     const isBlog=pathname.startsWith('/blog/');
-    if(isBlog&&file.endsWith('index.html')){const publication=JSON.parse(await readFile(path.join(root,'blog/publication.json'),'utf8'));const pagePath=pathname.replace(/index\.html$/,'');body=Buffer.from(renderBlogPublication(body.toString('utf8'),pagePath==='/blog/'||pagePath===publication.article?publication.datePublished:null));}
     if(isBlog){res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://mc.yandex.ru https://mc.yandex.com; frame-src https://rutube.ru; img-src 'self' data: https://mc.yandex.ru https://mc.yandex.com; style-src 'self'; script-src 'self' https://mc.yandex.ru https://mc.yandex.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"});res.end(req.method==='HEAD'?undefined:body);return;}
     res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; frame-src https://rutube.ru; img-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"});res.end(req.method==='HEAD'?undefined:body);
   }catch{res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Страница не найдена');}
