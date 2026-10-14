@@ -229,9 +229,9 @@ test('TEST DRIVE starts with a required placeholder and reuses only an eligible 
   const h=formHarness(()=>{});h.open('order',undefined,undefined,true);
   assert.equal(h.orderFields.hidden,false);assert.equal(h.form.elements.fuel.required,true);assert.equal(h.form.elements.fuel.value,'');
   assert.equal(h.summary.textContent,'Syntonik TEST DRIVE · 15 мл');assert.equal(h.price.textContent,'690');
-  assert.match(h.form.elements.fuel.innerHTML,/Выберите тип топлива/);assert.doesNotMatch(h.form.elements.fuel.innerHTML,/mazut|Мазут/);
-  for(const fuel of ['petrol','diesel','lpg']){h.context.lastChosenFuelId=fuel;h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,fuel);}
-  h.context.lastChosenFuelId='mazut';h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,'');
+  assert.match(h.form.elements.fuel.innerHTML,/Выберите тип топлива/);assert.match(h.form.elements.fuel.innerHTML,/Мазут/);
+  for(const fuel of ['petrol','diesel','lpg','mazut']){h.context.lastChosenFuelId=fuel;h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,fuel);}
+  h.context.lastChosenFuelId='unknown';h.open('order',undefined,undefined,true);assert.equal(h.form.elements.fuel.value,'');
   h.open('order','mazut','250');assert.equal(h.orderFields.hidden,true);assert.equal(h.form.elements.fuel.required,false);assert.equal(h.form.elements.fuel.value,'mazut');assert.match(h.form.elements.fuel.innerHTML,/Мазут/);
   h.open('callback');assert.equal(h.orderFields.hidden,true);assert.equal(h.form.elements.fuel.disabled,true);assert.equal(h.form.elements.fuel.required,false);
 });
@@ -239,14 +239,14 @@ test('TEST DRIVE starts with a required placeholder and reuses only an eligible 
 test('missing or unsupported TEST DRIVE fuel is blocked and a corrected choice clears its error',async()=>{
   let calls=0;const h=formHarness(async()=>{calls++;return {success:true};});
   h.form.dataset.kind='order';h.form.dataset.testDrive='true';h.form.elements.volume.value='15';
-  for(const fuel of ['', 'mazut', 'unknown']){h.form.elements.fuel.value=fuel;await h.submit();assert.equal(calls,0);assert.equal(h.fuelError.textContent,'Выберите тип топлива');assert.equal(h.fuelError.hidden,false);assert.equal(h.form.elements.fuel.attributes['aria-invalid'],'true');}
+  for(const fuel of ['', 'unknown']){h.form.elements.fuel.value=fuel;await h.submit();assert.equal(calls,0);assert.equal(h.fuelError.textContent,'Выберите тип топлива');assert.equal(h.fuelError.hidden,false);assert.equal(h.form.elements.fuel.attributes['aria-invalid'],'true');}
   h.form.elements.fuel.value='diesel';h.form.elements.fuel.handlers.change();assert.equal(h.fuelError.hidden,true);assert.equal(h.context.lastChosenFuelId,'diesel');
   h.form.elements.phone.value='8999123456';await h.submit();assert.equal(calls,0);assert.equal(h.error.hidden,false);
   h.form.elements.phone.value='89991234567';await h.submit();assert.equal(calls,1);
 });
 
 test('each TEST DRIVE fuel and the final changed selection reach existing Sheets and Telegram fields',async()=>{
-  for(const [fuel,name] of [['petrol','Бензин'],['diesel','Дизель'],['lpg','ГБО']]){
+  for(const [fuel,name] of [['petrol','Бензин'],['diesel','Дизель'],['lpg','ГБО'],['mazut','Мазут']]){
     const backend=scriptHarness({config:{MAX_ENABLED:'false'}});let payload;
     const send=createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(_,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>backend.post(payload)};}});
     const h=formHarness(send);h.form.dataset.kind='order';h.form.dataset.testDrive='true';h.form.elements.volume.value='15';

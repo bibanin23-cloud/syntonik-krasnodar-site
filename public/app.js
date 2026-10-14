@@ -180,7 +180,7 @@ const leadFields=document.querySelector('#lead-fields'),leadSuccess=document.que
 const phoneError=document.querySelector('#lead-phone-error');
 const emailError=document.querySelector('#lead-email-error');
 const testDriveProduct={ml:15,label:'15 мл',price:690,name:'Syntonik TEST DRIVE'};
-const testDriveFuels=fuels.filter(f=>['petrol','diesel','lpg'].includes(f.id));
+const testDriveFuels=fuels;
 const fuelError=document.querySelector('#lead-fuel-error');
 const submitLead=createLeadSubmitter(LEAD_ENDPOINT);
 document.querySelector('#lead-setup-note').hidden=Boolean(LEAD_ENDPOINT);

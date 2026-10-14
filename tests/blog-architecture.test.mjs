@@ -5,6 +5,13 @@ import {createHash} from 'node:crypto';
 import {loadBlogRegistry,renderBlog,validateRegistry,relatedPosts,withHeadingIds,extractLegacyContent,postUrl,categoryUrl} from '../scripts/blog.mjs';
 const slug='bezopasen-li-syntonik-dlya-dvigatelya';
 const originalHash='3469422b747923d5d671bafd1b5cb67eb5df7b0797155aa5fceebaad42533791';
+test('personal inputs are excluded from Webvisor in the homepage and every generated blog form',async()=>{
+  const homepage=await readFile(new URL('../public/index.html',import.meta.url),'utf8'),{pages}=await renderBlog({includeDrafts:true});
+  for(const html of [homepage,...pages.values()])for(const field of ['name','phone','email','city','comment']){
+    const tag=[...html.matchAll(/<(?:input|textarea)\b[^>]*>/g)].map(match=>match[0]).find(tag=>tag.includes(`name="${field}"`));
+    assert.ok(tag,`Missing field ${field}`);assert.match(tag,/class="[^"]*\bym-disable-keys\b/);
+  }
+});
 test('legacy article file and full approved body remain intact behind the adapter',async()=>{
   const original=(await readFile(new URL(`../public/blog/${slug}/index.html`,import.meta.url),'utf8')).replaceAll('\r\n','\n');
   assert.equal(createHash('sha256').update(original).digest('hex'),originalHash);
