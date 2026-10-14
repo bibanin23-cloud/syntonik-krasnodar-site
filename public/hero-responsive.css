@@ -20,16 +20,19 @@
 #hero h1 em, #hero .hero-distance { white-space: nowrap; }
 #hero .hero-distance { font-weight: inherit; }
 #hero .lead { max-width: 100%; font-size: clamp(13px, 1.05vw, 18px); line-height: 1.45; margin-bottom: 20px; }
-#hero .hero-sample { display: flex; align-items: center; gap: 10px; font-size: 16px; line-height: 1.45; }
+#hero .hero-sample { display: flex; align-items: center; gap: 10px; width: min(100%, 380px); padding: 10px 14px; border-radius: 10px; background: rgb(242 248 237 / 82%); font-size: 16px; line-height: 1.45; }
 #hero .hero-sample p { margin: 0; }
 #hero .hero-sample p:first-child { font-weight: 600; }
 #hero .hero-sample p + p { margin-top: 4px; font-size: 14px; color: #56625a; }
 #hero .hero-usage {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 18px 0 0;
-  padding: 0;
+  gap: 6px;
+  width: min(100%, 380px);
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgb(248 251 246 / 88%);
   list-style: none;
   font-size: 14px;
   line-height: 1.45;
@@ -56,7 +59,9 @@
   #hero.hero--approved { min-height: 0; padding: calc(var(--site-header-height) + 20px) 5% 20px; }
   #hero .hero-copy { width: 100%; max-width: none; margin-bottom: 0; }
   #hero h1 { font-size: clamp(28px, 5.5vw, 66px); letter-spacing: -1.5px; line-height: 1.08; }
-  #hero .lead { max-width: 690px; font-size: 18px; }
+  #hero .lead { max-width: 690px; font-size: 18px; margin-bottom: 10px; }
+  #hero .hero-sample, #hero .hero-usage { padding: 6px 14px; }
+  #hero .hero-usage { margin-top: 8px; }
   #hero .hero-scene {
     position: relative;
     inset: auto;
@@ -83,11 +88,12 @@
 }
 
 @media (max-width: 760px) {
-  #hero h1 { font-size: clamp(28px, 7.1vw, 50px); margin-bottom: 16px; }
+  #hero h1 { font-size: clamp(28px, 7.1vw, 50px); margin-bottom: 12px; }
   #hero h1 > span:last-child { font-size: clamp(20px, 6.3vw, 46px); white-space: nowrap; }
-  #hero .lead { font-size: 16px; margin-bottom: 16px; }
-  #hero .hero-sample { font-size: 14px; }
-  #hero .hero-usage { flex-direction: column; gap: 6px; margin-top: 14px; }
+  #hero .lead { font-size: 16px; margin-bottom: 10px; }
+  #hero .hero-sample { font-size: 14px; padding: 6px 12px; }
+  #hero .hero-usage { flex-direction: column; gap: 4px; margin-top: 8px; padding: 6px 12px; }
+  #hero .hero-scene { margin-top: 10px; }
   #hero .hero-scroll { display: none; }
 }
 
