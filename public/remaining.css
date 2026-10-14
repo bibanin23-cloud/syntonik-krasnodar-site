@@ -388,7 +388,7 @@
 #lead-dialog textarea { display:block; resize:vertical; }
 #lead-dialog input[aria-invalid=true] { border-color:#b3261e; }
 #lead-dialog #lead-fuel[aria-invalid=true] { border-color:#b3261e; }
-#lead-dialog #lead-phone-error,#lead-dialog #lead-fuel-error { display:block; margin-top:5px; font-size:12px; font-weight:400; color:#b3261e; }
+#lead-dialog #lead-phone-error,#lead-dialog #lead-fuel-error,#lead-dialog #lead-email-error { display:block; margin-top:5px; font-size:12px; font-weight:400; color:#b3261e; }
 #lead-dialog #lead-comment { margin-bottom:12px; }
 #lead-dialog #lead-comment summary { min-height:44px; display:list-item; padding:10px 0; font-size:14px; cursor:pointer; }
 #lead-dialog .lead-comment-label { margin:0; font-size:13px; }

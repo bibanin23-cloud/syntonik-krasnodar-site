@@ -96,7 +96,8 @@ export async function renderBlog({registry,includeDrafts=false,indexable=false}=
   validateRegistry(registry);
   const [template,home,legacy]=await Promise.all([readFile(path.join(project,'content/blog/template.html'),'utf8'),readFile(path.join(project,'public/index.html'),'utf8'),readFile(path.join(project,'public/blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html'),'utf8')]);
   const footer=home.match(/<footer\b[\s\S]*?<\/footer>/)?.[0]?.replace(/href="#/g,'href="/#');
-  const dialogs=[...legacy.matchAll(/<dialog\b[\s\S]*?<\/dialog>/g)].map(m=>m[0]).join('');
+  // Extend the shared blog form without changing the approved legacy article file.
+  const dialogs=[...legacy.matchAll(/<dialog\b[\s\S]*?<\/dialog>/g)].map(m=>m[0]).join('').replace('<label for="blog-lead-city">','<label for="blog-lead-email">Электронная почта (необязательно)<input id="blog-lead-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="example@mail.ru" maxlength="254" aria-describedby="blog-email-error" class="ym-disable-keys"><span id="blog-email-error" role="status" hidden></span></label><label for="blog-lead-city">');
   if(!footer||!dialogs)throw new Error('Existing footer/dialogs not found');
   for(const author of Object.values(registry.authors))await stat(path.join(project,'public',author.photo));
   const eligible=visiblePosts(registry,includeDrafts),contents=new Map(),reading=new Map();

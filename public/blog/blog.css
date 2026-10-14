@@ -74,7 +74,7 @@
 .blog #blog-lead-fields label { display:block; font-size:14px; font-weight:700; margin:0 0 14px; }
 .blog #blog-lead-fields input:not([type=checkbox]),.blog #blog-lead-fields textarea { display:block; width:100%; min-height:44px; padding:10px; margin-top:5px; border:1px solid #b6c0b0; border-radius:5px; font:inherit; font-size:16px; }
 .blog #blog-lead-fields input[aria-invalid=true] { border-color:#b3261e; }
-.blog #blog-phone-error { display:block; margin-top:6px; color:#b3261e; font-size:12px; font-weight:400; }
+.blog #blog-phone-error,.blog #blog-email-error { display:block; margin-top:6px; color:#b3261e; font-size:12px; font-weight:400; }
 .blog #blog-lead-fields details { margin-bottom:14px; }
 .blog #blog-lead-fields summary { min-height:44px; padding:10px 0; font-size:14px; cursor:pointer; }
 .blog #blog-lead-fields textarea { resize:vertical; }

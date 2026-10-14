@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
-import {captureSessionUtms,createLeadSubmitter,normaliseRuMobile} from '../public/lib/leads.js';
+import {captureSessionUtms,createLeadSubmitter,normaliseRuMobile,normaliseOptionalEmail,validateOptionalEmail} from '../public/lib/leads.js';
 
 const endpoint='https://script.google.com/macros/s/test/exec';
 const lead={name:'  Тест  ',phone:' +79950000000 ',city:'Краснодар',form:'callback',page:'https://syntonik-krasnodar.ru/#dealer',consent:true};
@@ -62,9 +62,11 @@ test('oversized values are limited before transmission',async()=>{
 });
 
 const source=await readFile(new URL('../integrations/apps-script/Code.gs',import.meta.url),'utf8');
-function scriptHarness({failSheet=false,failTelegram=false,failMax=false,config={}}={}){
-  const rows=[],notes=[],calls=[],warnings=[];
-  const sheet={getLastRow:()=>rows.length,setFrozenRows(){},getRange(row,col,height,width){return {
+function scriptHarness({failSheet=false,failTelegram=false,failMax=false,config={},initialRows=[],initialNotes=[],maxColumns=26}={}){
+  const rows=structuredClone(initialRows),notes=structuredClone(initialNotes),calls=[],warnings=[],insertions=[];
+  const sheet={getLastRow:()=>rows.length,getLastColumn:()=>Math.max(0,...rows.map(row=>row.length)),getMaxColumns:()=>maxColumns,
+    insertColumnsAfter(column,count){insertions.push({column,count});maxColumns+=count;},setFrozenRows(){},getRange(row,col,height=1,width=1){return {
+    getValue:()=>rows[row-1]?.[col-1]??'',
     setValues(values){for(let n=0;n<height;n++){rows[row+n-1]??=[];for(let c=0;c<width;c++)rows[row+n-1][col+c-1]=values[n][c];}return this;},
     setNumberFormat(){return this;},setNote(value){notes[row-1]??=[];notes[row-1][col-1]=value;return this;},
     getNotes(){return Array.from({length:height},(_,n)=>[notes[row+n-1]?.[col-1]||'']);}
@@ -80,12 +82,12 @@ function scriptHarness({failSheet=false,failTelegram=false,failMax=false,config=
     console:{warn:text=>warnings.push(text),log(){}},
   };
   vm.createContext(context);vm.runInContext(source,context);
-  return {context,rows,notes,calls,warnings,post:(data={})=>context.doPost({postData:{contents:JSON.stringify({...lead,request_id:id,...data})}})};
+  return {context,rows,notes,calls,warnings,insertions,post:(data={})=>context.doPost({postData:{contents:JSON.stringify({...lead,request_id:id,...data})}})};
 }
-test('one lead saves the required 12 columns and reaches both independent APIs',()=>{
+test('one lead preserves the first 12 columns, appends Email and reaches configured APIs',()=>{
   const h=scriptHarness(),receipt=h.post({city:'Краснодар',form:'order',terms:true,fuel:'Бензин',volume:'250 мл',utm_source:'test'});
   assert.equal(receipt.success,true);assert.equal(receipt.notifications.telegram,'sent');assert.equal(receipt.notifications.max,'sent');
-  assert.equal(h.rows.length,2);assert.equal(h.rows[0].length,12);assert.equal(h.rows[1].length,12);
+  assert.equal(h.rows.length,2);assert.equal(h.rows[0].length,13);assert.equal(h.rows[1].length,13);assert.equal(h.rows[0][12],'Email');assert.equal(h.rows[1][12],'');
   assert.equal(h.rows[1][0],'07.10.2026 15:00:00');assert.equal(h.rows[1][1],'Тест');assert.equal(h.rows[1][11],'Новая');
   assert.match(h.rows[1][3],/Город: Краснодар\nТопливо: Бензин\nОбъём: 250 мл/);assert.equal(h.rows[1][6],'test');
   assert.equal(h.calls.length,2);assert.match(h.calls[1].url,/^https:\/\/platform-api2\.max\.ru\/messages\?chat_id=456/);
@@ -129,8 +131,8 @@ test('MAX user address and independently disabled MAX channel',()=>{
   const user=scriptHarness({config:{MAX_CHAT_ID:'',MAX_USER_ID:'789'}});user.post();assert.match(user.calls[1].url,/user_id=789/);
   const disabled=scriptHarness({config:{MAX_ENABLED:'false'}});assert.equal(disabled.post().notifications.max,'disabled');assert.equal(disabled.calls.length,1);
 });
-test('maximum allowed lead fits both messenger limits with date intact',()=>{
-  const h=scriptHarness();const data=h.context.normalizeLead({...lead,name:'x'.repeat(80),phone:'+79991234567',comment:'x'.repeat(1000),city:'x'.repeat(100),fuel:'x'.repeat(40),volume:'x'.repeat(40),page:'https://example.test/'+ 'x'.repeat(980),request_id:id,...Object.fromEntries(['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].map(k=>[k,'x'.repeat(200)]))});
+test('maximum allowed lead including Email fits both messenger limits with date intact',()=>{
+  const h=scriptHarness();const data=h.context.normalizeLead({...lead,name:'x'.repeat(80),phone:'+79991234567',email:'a'.repeat(64)+'@'+['b'.repeat(63),'c'.repeat(63),'d'.repeat(61)].join('.'),comment:'x'.repeat(1000),city:'x'.repeat(100),fuel:'x'.repeat(40),volume:'x'.repeat(40),page:'https://example.test/'+ 'x'.repeat(980),request_id:id,...Object.fromEntries(['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].map(k=>[k,'x'.repeat(200)]))});
   data.timestamp='07.10.2026 15:00:00';const message=h.context.leadMessage(data);assert.ok(message.length<=4000);assert.ok(message.endsWith(data.timestamp));
 });
 
@@ -138,25 +140,28 @@ const appSource=await readFile(new URL('../public/app.js',import.meta.url),'utf8
 function formHarness(send){
   const handlers={},button={disabled:false},status={textContent:''},note={hidden:false};
   const control=(value='')=>({value,disabled:false,checked:true,attributes:{},handlers:{},validationMessage:'',textContent:'',hidden:false,
+    get validity(){let typeMismatch=false;try{normaliseOptionalEmail(this.value);}catch{typeMismatch=true;}return {typeMismatch,tooLong:this.value.length>254};},
     setCustomValidity(message){this.validationMessage=message;},reportValidity(){return !this.validationMessage;},addEventListener(name,handler){this.handlers[name]=handler;},
     setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];},focus(){this.focused=true;}});
-  const elements={name:control(' Тест '),phone:control(' +79950000000 '),city:control(' Краснодар '),comment:control(''),fuel:control('petrol'),volume:control('250'),consent:control('on'),terms:control('on')};
+  const elements={name:control(' Тест '),phone:control(' +79950000000 '),email:control(''),city:control(' Краснодар '),comment:control(''),fuel:control('petrol'),volume:control('250'),consent:control('on'),terms:control('on')};
   const form={elements,dataset:{kind:'callback',testDrive:'false'},attributes:{},reportValidity:()=>!Object.values(elements).some(e=>e.validationMessage)&&elements.consent.checked&&(form.dataset.kind!=='order'||elements.terms.checked),
     querySelector:()=>button,addEventListener:(name,handler)=>handlers[name]=handler,
     setAttribute(name,value){this.attributes[name]=value;},removeAttribute(name){delete this.attributes[name];},
-    reset(){for(const field of ['name','phone','city','comment'])elements[field].value='';}
+    reset(){for(const field of ['name','phone','email','city','comment'])elements[field].value='';}
   };
   const dialog={addEventListener(){},close(){},showModal(){}};
   const fields={hidden:false},successView={hidden:true},error=control('');error.hidden=true;
   const title=control(''),summary=control(''),price=control(''),choice=control('');
   const fuelError=control(''),orderFields=control('');fuelError.hidden=true;orderFields.hidden=true;
+  const emailError=control('');emailError.hidden=true;
+  const emailTarget={'#lead-email-error':emailError};
   const targets={'#lead-dialog':dialog,'#lead-form':form,'#lead-setup-note':note,'#form-status':status,'#lead-fields':fields,'#lead-success':successView,'#lead-phone-error':error,'#lead-fuel-error':fuelError,'#order-fields':orderFields,'#dialog-title':title,'#lead-order-summary':choice,'#lead-product-summary':summary,'#lead-price-summary':price,'#lead-payment-note':control(''),'#lead-comment':control(''),'#terms-label':control(''),'#close-dialog':control(''),'#close-lead-success':control('')};
-  const context={document:{querySelector:s=>targets[s],addEventListener(){}},window:{location:{href:'https://example.test/'}},LEAD_ENDPOINT:endpoint,
-    createLeadSubmitter:()=>send,normaliseRuMobile,sessionUtms:{utm_source:'test'},selectedFuel:{id:'petrol'},lastChosenFuelId:'',fuels:[{id:'petrol',name:'Бензин'},{id:'diesel',name:'Дизель'},{id:'lpg',name:'ГБО'},{id:'mazut',name:'Мазут'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
+  const context={document:{querySelector:s=>({...targets,...emailTarget})[s],addEventListener(){}},window:{location:{href:'https://example.test/'}},LEAD_ENDPOINT:endpoint,
+    createLeadSubmitter:()=>send,normaliseRuMobile,validateOptionalEmail,sessionUtms:{utm_source:'test'},selectedFuel:{id:'petrol'},lastChosenFuelId:'',fuels:[{id:'petrol',name:'Бензин'},{id:'diesel',name:'Дизель'},{id:'lpg',name:'ГБО'},{id:'mazut',name:'Мазут'}],volumes:[{ml:250,label:'250 мл',price:7100}],money:n=>String(n),
     FormData:class{constructor(form){this.values=Object.fromEntries(Object.entries(form.elements).map(([k,e])=>[k,((k==='consent'||k==='terms')&&!e.checked)?null:e.value]));}get(field){return this.values[field]??null;}}
   };
   vm.createContext(context);vm.runInContext(appSource.slice(appSource.indexOf("const dialog=document.querySelector('#lead-dialog')")),context);
-  return {form,button,status,note,fields,successView,error,fuelError,orderFields,title,summary,price,choice,context,open:(...args)=>context.openForm(...args),submit:()=>handlers.submit({preventDefault(){}})};
+  return {form,button,status,note,fields,successView,error,emailError,fuelError,orderFields,title,summary,price,choice,context,open:(...args)=>context.openForm(...args),submit:()=>handlers.submit({preventDefault(){}})};
 }
 
 test('existing form blocks double clicks, shows sending, resets on success and unlocks',async()=>{
@@ -172,7 +177,7 @@ test('existing form preserves entered data on failure and passes selected order 
   assert.equal(payload.fuel,'Бензин');assert.equal(payload.volume,'250 мл');assert.equal(payload.comment,'Цена упаковки: 7100');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
 });
 
-test('TEST DRIVE uses the existing order route and preserves the 12-column Sheets and Telegram contract',async()=>{
+test('TEST DRIVE uses the existing order route and preserves status and Telegram fields with optional Email',async()=>{
   const backend=scriptHarness({config:{MAX_ENABLED:'false'}});
   let payload,receipt;
   const send=createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(url,options)=>{
@@ -186,7 +191,7 @@ test('TEST DRIVE uses the existing order route and preserves the 12-column Sheet
   assert.equal(payload.comment,'Товар: Syntonik TEST DRIVE\nЦена упаковки: 690');
   assert.equal(payload.utm_source,'test');assert.equal(payload.consent,true);assert.equal(payload.terms,true);
   assert.equal(receipt.success,true);assert.equal(receipt.notifications.telegram,'sent');assert.equal(receipt.notifications.max,'disabled');
-  assert.equal(backend.rows.length,2);assert.equal(backend.rows[1].length,12);assert.ok(backend.rows[1][3].includes(payload.comment));assert.ok(backend.rows[1][3].includes('Объём: 15 мл'));
+  assert.equal(backend.rows.length,2);assert.equal(backend.rows[1].length,13);assert.ok(backend.rows[1][3].includes(payload.comment));assert.ok(backend.rows[1][3].includes('Объём: 15 мл'));
   assert.equal(backend.calls.length,1);assert.match(backend.calls[0].url,/api.telegram.org/);
   assert.ok(JSON.parse(backend.calls[0].options.payload).text.includes('Syntonik TEST DRIVE'));
   assert.equal(form.title.textContent,'Заявка отправлена!');assert.equal(form.successView.hidden,false);
@@ -247,8 +252,60 @@ test('each TEST DRIVE fuel and the final changed selection reach existing Sheets
     const h=formHarness(send);h.form.dataset.kind='order';h.form.dataset.testDrive='true';h.form.elements.volume.value='15';
     h.form.elements.fuel.value='petrol';h.form.elements.fuel.handlers.change();h.form.elements.fuel.value=fuel;h.form.elements.fuel.handlers.change();await h.submit();
     assert.equal(payload.fuel,name);assert.equal(payload.volume,'15 мл');assert.equal(payload.phone,'+79950000000');assert.equal(payload.utm_source,'test');
-    assert.equal(backend.rows[1].length,12);assert.ok(backend.rows[1][3].includes('Топливо: '+name));assert.equal(backend.calls.length,1);
+    assert.equal(backend.rows[1].length,13);assert.ok(backend.rows[1][3].includes('Топливо: '+name));assert.equal(backend.calls.length,1);
     const message=JSON.parse(backend.calls[0].options.payload).text;for(const text of ['Товар: Syntonik TEST DRIVE','Топливо: '+name,'Объём: 15 мл','Цена упаковки: 690'])assert.ok(message.includes(text));
     assert.equal(h.successView.hidden,false);
   }
+});
+
+test('optional Email syntax and length are identical in the shared client and Apps Script',async()=>{
+  const h=scriptHarness();
+  for(const value of [undefined,null,'','   ',' User+Tag@Sub.Example.COM ','a@b','=lead@example.org']){
+    const expected=value==null?'':value.trim();assert.equal(normaliseOptionalEmail(value),expected);assert.equal(h.context.normaliseOptionalEmail(value),expected);
+  }
+  const longest='a'.repeat(64)+'@'+['b'.repeat(63),'c'.repeat(63),'d'.repeat(61)].join('.');assert.equal(longest.length,254);assert.equal(normaliseOptionalEmail(longest),longest);
+  for(const email of ['mail','a@@b.com','a b@mail.ru','a@','@mail.ru','a@-mail.ru','a@mail..ru','a@'+'d'.repeat(64)+'.ru',longest+'a',12,{}]){
+    assert.throws(()=>normaliseOptionalEmail(email));assert.throws(()=>h.context.normaliseOptionalEmail(email));
+    let calls=0;const submit=createLeadSubmitter(endpoint,{fetcher:()=>calls++});assert.throws(()=>submit({...lead,email}));assert.equal(calls,0);
+    const backend=scriptHarness();assert.equal(backend.post({email}).success,false);assert.equal(backend.rows.length,0);assert.equal(backend.calls.length,0);
+  }
+});
+test('all shared form modes carry an optional Email through payload, separate Sheets column and Telegram',async()=>{
+  for(const mode of ['callback','catalog','test-drive'])for(const email of ['', '  Buyer+Trial@Example.COM  ']){
+    const backend=scriptHarness({config:{MAX_ENABLED:'false'}});let payload;
+    const send=createLeadSubmitter(endpoint,{makeId:()=>id,fetcher:async(_,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>backend.post(payload)};}});
+    const h=formHarness(send);h.form.dataset.kind=mode==='callback'?'callback':'order';h.form.dataset.testDrive=String(mode==='test-drive');h.form.elements.volume.value=mode==='test-drive'?'15':'250';h.form.elements.email.value=email;await h.submit();
+    assert.equal(payload.email,email.trim());assert.equal(backend.rows[1][12],email.trim());assert.equal(backend.rows[0][12],'Email');assert.equal(backend.rows[1][11],'Новая');assert.equal(backend.notes[1][11],id);
+    assert.ok(!backend.rows[1][3].includes('Buyer+Trial'));const message=JSON.parse(backend.calls[0].options.payload).text;
+    if(email)assert.ok(message.includes('Email: '+email.trim()));else assert.doesNotMatch(message,/Email:/);
+    assert.equal(backend.calls.length,1);assert.equal(payload.utm_source,'test');assert.equal(payload.phone,'+79950000000');assert.equal(h.successView.hidden,false);
+    assert.equal(payload.form,mode==='callback'?'callback':'order');assert.equal(payload.volume,mode==='callback'?'':mode==='test-drive'?'15 мл':'250 мл');
+    if(mode==='test-drive')assert.ok(message.includes('Товар: Syntonik TEST DRIVE\nЦена упаковки: 690'));
+  }
+});
+test('Email errors preserve other fields, clearing/correcting removes errors, reopening resets personal data',async()=>{
+  let calls=0;const h=formHarness(async()=>{calls++;throw Error('network');});h.form.elements.email.value='not-an-email';await h.submit();assert.equal(calls,0);
+  assert.equal(h.emailError.textContent,'Проверьте адрес электронной почты');assert.equal(h.emailError.hidden,false);assert.equal(h.form.elements.name.value,'Тест');assert.equal(h.form.elements.city.value,'Краснодар');assert.equal(h.form.elements.email.attributes['aria-invalid'],'true');
+  h.form.elements.email.value='';h.form.elements.email.handlers.input();assert.equal(h.emailError.hidden,true);await h.submit();assert.equal(calls,1);
+  h.form.elements.email.value='  Correct@Example.COM  ';h.form.elements.email.handlers.blur();assert.equal(h.emailError.hidden,true);assert.equal(h.form.elements.email.value,'Correct@Example.COM');await h.submit();assert.equal(calls,2);assert.equal(h.form.elements.email.value,'Correct@Example.COM');
+  h.open('order','petrol','250');assert.equal(h.form.elements.email.value,'');assert.equal(h.form.elements.name.value,'');assert.equal(h.form.elements.phone.value,'');assert.equal(h.emailError.hidden,true);assert.equal(h.form.elements.email.validationMessage,'');
+});
+test('12-column live sheet migration preserves rows, status notes and duplicate detection without rewriting old data',()=>{
+  const headers=['Дата и время','Имя','Телефон / контакт','Комментарий','Форма','Страница','utm_source','utm_medium','utm_campaign','utm_content','utm_term','Статус'];
+  const oldRow=['01.10.2026','Реальная заявка',"'+79990000000",'Старый комментарий','order','https://example.test/','campaign','','','','','В работе'];
+  const oldId='22222222-2222-4222-8222-222222222222',oldNotes=[[],Array(11).fill('').concat(oldId)];
+  const h=scriptHarness({initialRows:[headers,oldRow],initialNotes:oldNotes,maxColumns:12,config:{MAX_ENABLED:'false'}});
+  assert.equal(h.post({request_id:oldId}).duplicate,true);assert.equal(h.calls.length,0);assert.deepEqual(h.rows,[headers,oldRow]);
+  assert.equal(h.post({email:'New@Example.com'}).success,true);assert.deepEqual(h.rows[0].slice(0,12),headers);assert.equal(h.rows[0][12],'Email');assert.deepEqual(h.rows[1],oldRow);assert.deepEqual(h.notes[1],oldNotes[1]);
+  assert.deepEqual(h.insertions,[{column:12,count:1}]);assert.equal(h.rows[2][11],'Новая');assert.equal(h.rows[2][12],'New@Example.com');assert.equal(h.notes[2][11],id);
+  assert.equal(h.post({email:'New@Example.com'}).duplicate,true);assert.equal(h.rows.length,3);assert.equal(h.calls.length,1);
+  assert.equal(h.post({request_id:'33333333-3333-4333-8333-333333333333'}).success,true);assert.equal(h.rows[3][12],'');assert.equal(h.calls.length,2);assert.doesNotMatch(JSON.parse(h.calls[1].options.payload).text,/Email:/);
+});
+test('existing Email column is reused, a conflicting extra column is untouched, formula-like emails are escaped',()=>{
+  const headers=Array(12).fill('Existing');headers[11]='Статус';
+  const existing=scriptHarness({initialRows:[headers.concat('Email'),Array(12).fill('').concat('Old@Example.com')],config:{MAX_ENABLED:'false'}});
+  assert.equal(existing.post({email:'New@Example.com'}).success,true);assert.equal(existing.rows[1][12],'Old@Example.com');assert.equal(existing.insertions.length,0);
+  const conflicting=scriptHarness({initialRows:[headers.concat('Не трогать'),Array(12).fill('').concat('Существующие данные')]});
+  assert.equal(conflicting.post({email:'New@Example.com'}).success,false);assert.equal(conflicting.rows[0][12],'Не трогать');assert.equal(conflicting.rows[1][12],'Существующие данные');assert.equal(conflicting.rows.length,2);assert.equal(conflicting.calls.length,0);
+  for(const email of ['=lead@example.com','+lead@example.com','-lead@example.com']){const h=scriptHarness({config:{MAX_ENABLED:'false'}});assert.equal(h.post({email}).success,true);assert.equal(h.rows[1][12],"'"+email);assert.ok(JSON.parse(h.calls[0].options.payload).text.includes('Email: '+email));}
 });

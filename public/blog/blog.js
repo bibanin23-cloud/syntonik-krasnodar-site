@@ -22,6 +22,7 @@ function goal(name){try{window.ym(113548520,'reachGoal',name,{page:location.path
 const dialog=document.querySelector('#blog-lead-dialog'),form=document.querySelector('#blog-lead-form');
 const fields=document.querySelector('#blog-lead-fields'),success=document.querySelector('#blog-lead-success');
 const status=document.querySelector('#blog-form-status'),phoneError=document.querySelector('#blog-phone-error');
+const emailError=document.querySelector('#blog-email-error');
 const submit=leads.createLeadSubmitter(LEAD_ENDPOINT);
 let pending=false,opener;
 // Compatible with the currently published lead module, which predates this named export.
@@ -44,21 +45,26 @@ document.addEventListener('click',event=>{
   const trigger=event.target.closest('[data-callback]');if(!trigger||pending)return;
   opener=trigger;form.reset();fields.hidden=false;success.hidden=true;status.textContent='';
   document.querySelector('#blog-dialog-title').textContent='Получить консультацию';form.querySelector('details').open=false;
-  for(const name of ['name','phone'])form.elements[name].setCustomValidity('');
+  for(const name of ['name','phone','email'])form.elements[name].setCustomValidity('');
+  emailError.hidden=true;emailError.textContent='';form.elements.email.removeAttribute('aria-invalid');
   form.elements.phone.removeAttribute('aria-invalid');phoneError.hidden=true;phoneError.textContent='';
   dialog.showModal();form.elements.name.focus();goal('form_open_callback');
 });
 form.elements.name.addEventListener('input',()=>form.elements.name.setCustomValidity(''));
 form.elements.phone.addEventListener('blur',validatePhone);
 form.elements.phone.addEventListener('input',()=>{if(!phoneError.hidden)validatePhone();});
+form.elements.email.addEventListener('blur',()=>leads.validateOptionalEmail(form.elements.email,emailError));
+form.elements.email.addEventListener('input',()=>{if(!emailError.hidden)leads.validateOptionalEmail(form.elements.email,emailError);});
 form.addEventListener('submit',async event=>{
   event.preventDefault();if(pending||!success.hidden)return;
   form.elements.name.value=form.elements.name.value.trim();form.elements.city.value=form.elements.city.value.trim();
   if(!form.elements.name.value){form.elements.name.setCustomValidity('Заполните поле.');form.elements.name.reportValidity();form.elements.name.focus();return;}
-  const phone=validatePhone();if(!phone){form.elements.phone.focus();return;}if(!form.reportValidity())return;
+  const phone=validatePhone();if(!phone){form.elements.phone.focus();return;}
+  if(!leads.validateOptionalEmail(form.elements.email,emailError)){form.elements.email.focus();return;}
+  if(!form.reportValidity())return;
   const data=new FormData(form),button=form.querySelector('[type=submit]');pending=true;button.disabled=true;form.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
   try{
-    const result=await submit({name:data.get('name'),phone,city:data.get('city'),comment:data.get('comment'),form:'callback',page:location.href,...leads.sessionUtms,consent:data.get('consent')==='on',terms:false,fuel:'',volume:''});
+    const result=await submit({name:data.get('name'),phone,email:data.get('email'),city:data.get('city'),comment:data.get('comment'),form:'callback',page:location.href,...leads.sessionUtms,consent:data.get('consent')==='on',terms:false,fuel:'',volume:''});
     if(result?.success!==true)throw new Error('Lead was not saved');
     form.reset();fields.hidden=true;success.hidden=false;status.textContent='';document.querySelector('#blog-dialog-title').textContent='Заявка отправлена!';document.querySelector('#blog-close-success').focus();goal('lead_callback_success');
   }catch{status.textContent='Не удалось отправить заявку. Попробуйте ещё раз.';}

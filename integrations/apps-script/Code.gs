@@ -1,5 +1,5 @@
 // Copy into Google Apps Script. Configure IDs and tokens in Script Properties.
-const LEAD_HEADERS = ['Дата и время','Имя','Телефон / контакт','Комментарий','Форма','Страница','utm_source','utm_medium','utm_campaign','utm_content','utm_term','Статус'];
+const LEAD_HEADERS = ['Дата и время','Имя','Телефон / контакт','Комментарий','Форма','Страница','utm_source','utm_medium','utm_campaign','utm_content','utm_term','Статус','Email'];
 const LEAD_UTMS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
 
 function doPost(e){
@@ -14,15 +14,15 @@ function doPost(e){
     const book=SpreadsheetApp.openById(config.GOOGLE_SHEET_ID);
     const sheet=book.getSheetByName(config.SHEET_NAME||'Заявки')||book.insertSheet(config.SHEET_NAME||'Заявки');
     const lastRow=sheet.getLastRow();
-    // Keep the required 12 columns. The request ID lives in a status-cell note.
+    // Status and the request ID note remain in column 12; optional Email is column 13.
     if(lastRow>1 && sheet.getRange(2,12,lastRow-1,1).getNotes().some(row=>row[0]===data.request_id)){
       return leadJson({success:true,duplicate:true});
     }
-    if(!lastRow){sheet.getRange(1,1,1,12).setValues([LEAD_HEADERS]);sheet.setFrozenRows(1);}
+    ensureLeadHeaders(sheet,lastRow);
     data.timestamp=Utilities.formatDate(new Date(),'Europe/Moscow','dd.MM.yyyy HH:mm:ss');
     const row=sheet.getLastRow()+1;
-    const values=[data.timestamp,data.name,data.phone,data.comment,data.form,data.page,...LEAD_UTMS.map(field=>data[field]),'Новая'];
-    sheet.getRange(row,1,1,12).setNumberFormat('@').setValues([values.map(sheetText)]);
+    const values=[data.timestamp,data.name,data.phone,data.comment,data.form,data.page,...LEAD_UTMS.map(field=>data[field]),'Новая',data.email];
+    sheet.getRange(row,1,1,13).setNumberFormat('@').setValues([values.map(sheetText)]);
     sheet.getRange(row,12).setNote(data.request_id);
     SpreadsheetApp.flush();
     lock.releaseLock();lock=null;
@@ -35,6 +35,16 @@ function doPost(e){
   }catch{
     return leadJson({success:false,error:'Не удалось сохранить заявку. Проверьте данные и настройки обработчика.'});
   }finally{if(lock)lock.releaseLock();}
+}
+
+function ensureLeadHeaders(sheet,lastRow){
+  const lastColumn=sheet.getLastColumn();
+  // Never overwrite an existing extra column with an unrelated header/data.
+  if(lastRow&&lastColumn>12&&sheet.getRange(1,13).getValue()!=='Email')throw new Error('email column conflict');
+  const columns=sheet.getMaxColumns();
+  if(columns<13)sheet.insertColumnsAfter(columns,13-columns);
+  if(!lastRow){sheet.getRange(1,1,1,13).setValues([LEAD_HEADERS]);sheet.setFrozenRows(1);}
+  else if(lastColumn<=12)sheet.getRange(1,13,1,1).setValues([['Email']]);
 }
 
 function doGet(){return leadJson({success:true,service:'Syntonik leads'});}
@@ -58,15 +68,23 @@ function normalizeLead(input){
   const data={};
   for(const [field,limit] of Object.entries({name:80,phone:80,comment:1000,form:80,page:1000,city:100,fuel:40,volume:40,request_id:80}))data[field]=leadText(input[field],limit);
   data.phone=normaliseRuMobile(input.phone);
+  data.email=normaliseOptionalEmail(input.email);
   for(const field of LEAD_UTMS)data[field]=leadText(input[field],200);
   if(!data.name||!data.phone||!['order','callback'].includes(data.form)||!/^https?:\/\/[^\s]+$/.test(data.page)||! /^[a-zA-Z0-9-]{16,80}$/.test(data.request_id)||input.consent!==true)throw new Error('validation');
   if(data.form==='order' && input.terms!==true)throw new Error('terms');
   data.comment=[data.comment,data.city?'Город: '+data.city:'',data.fuel?'Топливо: '+data.fuel:'',data.volume?'Объём: '+data.volume:''].filter(Boolean).join('\n');
   return data;
 }
+function normaliseOptionalEmail(value){
+  if(value==null)return '';
+  if(typeof value!=='string')throw new Error('email');
+  const email=value.trim();
+  if(email.length>254||(email&&!/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email)))throw new Error('email');
+  return email;
+}
 function sheetText(value){return /^[=+\-@]/.test(value)?"'"+value:value;}
 function leadMessage(data){
-  const labels=[['Имя',data.name],['Телефон',data.phone],['Комментарий',data.comment],['Форма',data.form==='order'?'Заказ Syntonik':'Обратный звонок'],['Страница',data.page],['Источник',data.utm_source],['Канал',data.utm_medium],['Кампания',data.utm_campaign],['Контент',data.utm_content],['Ключевое слово',data.utm_term],['Дата',data.timestamp]];
+  const labels=[['Имя',data.name],['Телефон',data.phone],['Email',data.email],['Комментарий',data.comment],['Форма',data.form==='order'?'Заказ Syntonik':'Обратный звонок'],['Страница',data.page],['Источник',data.utm_source],['Канал',data.utm_medium],['Кампания',data.utm_campaign],['Контент',data.utm_content],['Ключевое слово',data.utm_term],['Дата',data.timestamp]];
   // Plain text: user input cannot introduce Telegram/MAX markup.
   return '🔔 Новая заявка с сайта Syntonik\n\n'+labels.filter(item=>item[1]).map(item=>item[0]+': '+item[1]).join('\n');
 }

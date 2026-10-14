@@ -1,6 +1,24 @@
 export const UTM_FIELDS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
 const clean = (value,limit) => String(value ?? '').trim().replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,limit);
 
+// HTML type=email syntax, also usable without a DOM in the shared transport.
+export function normaliseOptionalEmail(value){
+  if(value==null)return '';
+  if(typeof value!=='string')throw new Error('Invalid email');
+  const email=value.trim();
+  if(email.length>254||(email&&!/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email)))throw new Error('Invalid email');
+  return email;
+}
+
+export function validateOptionalEmail(input,error){
+  input.value=input.value.trim();input.setCustomValidity('');
+  const valid=!input.value||(!input.validity.typeMismatch&&!input.validity.tooLong&&input.value.length<=254);
+  const message=valid?'':'Проверьте адрес электронной почты';
+  input.setCustomValidity(message);error.textContent=message;error.hidden=valid;
+  if(valid)input.removeAttribute('aria-invalid');else input.setAttribute('aria-invalid','true');
+  return valid;
+}
+
 export function normaliseRuMobile(value){
   if(typeof value!=='string')return null;
   const text=value.replace(/^[ \u00a0\u202f]+|[ \u00a0\u202f]+$/g,'');
@@ -42,6 +60,7 @@ export function createLeadSubmitter(endpoint,{fetcher=globalThis.fetch,makeId=()
     const lead={};
     for(const [field,limit] of Object.entries({name:80,comment:1000,form:80,page:1000,city:100,fuel:40,volume:40}))lead[field]=clean(data[field],limit);
     lead.phone=normaliseRuMobile(data.phone);
+    lead.email=normaliseOptionalEmail(data.email);
     for(const field of UTM_FIELDS)lead[field]=clean(data[field],200);
     lead.consent=data.consent===true;
     lead.terms=data.terms===true;

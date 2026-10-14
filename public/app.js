@@ -2,7 +2,7 @@ import {calculate} from './lib/calculator.js';
 import {fuels,volumes} from './data/catalog.js';
 import {cases,caseVideoEmbedUrl} from './data/cases.js';
 import {LEAD_ENDPOINT} from './lead-config.js';
-import {createLeadSubmitter,sessionUtms,normaliseRuMobile} from './lib/leads.js';
+import {createLeadSubmitter,sessionUtms,normaliseRuMobile,validateOptionalEmail} from './lib/leads.js';
 import './remaining.js';
 const siteHeader=document.querySelector('.site-header');
 function updateHeaderSurface(){siteHeader.classList.toggle('is-scrolled',window.scrollY>12);}
@@ -178,6 +178,7 @@ testDriveTerms.addEventListener('close',()=>testDriveTermsTrigger.focus({prevent
 const dialog=document.querySelector('#lead-dialog'),leadForm=document.querySelector('#lead-form');
 const leadFields=document.querySelector('#lead-fields'),leadSuccess=document.querySelector('#lead-success');
 const phoneError=document.querySelector('#lead-phone-error');
+const emailError=document.querySelector('#lead-email-error');
 const testDriveProduct={ml:15,label:'15 мл',price:690,name:'Syntonik TEST DRIVE'};
 const testDriveFuels=fuels.filter(f=>['petrol','diesel','lpg'].includes(f.id));
 const fuelError=document.querySelector('#lead-fuel-error');
@@ -217,7 +218,8 @@ function openForm(kind,fuel,volume,testDrive=false){
   const choice=orderChoice();
   document.querySelector('#lead-product-summary').textContent=order&&choice.product&&(trial||choice.fuel)?(trial?`Syntonik TEST DRIVE · ${choice.product.label}`:`Syntonik · ${choice.fuel.name} · ${choice.product.label}`):'';
   document.querySelector('#lead-price-summary').textContent=order&&choice.product?money(choice.product.price):'';
-  for(const field of ['name','phone','city'])leadForm.elements[field].setCustomValidity('');
+  for(const field of ['name','phone','email','city'])leadForm.elements[field].setCustomValidity('');
+  emailError.hidden=true;emailError.textContent='';leadForm.elements.email.removeAttribute('aria-invalid');
   phoneError.hidden=true;phoneError.textContent='';leadForm.elements.phone.removeAttribute('aria-invalid');
   leadForm.elements.fuel.setCustomValidity('');leadForm.elements.fuel.removeAttribute('aria-invalid');fuelError.hidden=true;fuelError.textContent='';
   document.querySelector('#form-status').textContent='';dialog.showModal();leadForm.elements.name.focus();
@@ -261,6 +263,8 @@ function validatePhone(){
 }
 leadForm.elements.phone.addEventListener('blur',validatePhone);
 leadForm.elements.phone.addEventListener('input',()=>{if(!phoneError.hidden)validatePhone();});
+leadForm.elements.email.addEventListener('blur',()=>validateOptionalEmail(leadForm.elements.email,emailError));
+leadForm.elements.email.addEventListener('input',()=>{if(!emailError.hidden)validateOptionalEmail(leadForm.elements.email,emailError);});
 function validateTestDriveFuel(){
   const valid=testDriveFuels.some(f=>f.id===leadForm.elements.fuel.value);
   const message=valid?'':'Выберите тип топлива';
@@ -278,6 +282,7 @@ leadForm.addEventListener('submit',async event=>{
   if(!leadForm.elements.name.value){leadForm.elements.name.setCustomValidity('Заполните поле.');leadForm.elements.name.reportValidity();leadForm.elements.name.focus();return;}
   const phone=validatePhone();
   if(!phone){leadForm.elements.phone.focus();return;}
+  if(!validateOptionalEmail(leadForm.elements.email,emailError)){leadForm.elements.email.focus();return;}
   if(leadForm.dataset.testDrive==='true'&&!validateTestDriveFuel()){leadForm.elements.fuel.reportValidity();leadForm.elements.fuel.focus();return;}
   if(!leadForm.reportValidity())return;
   const status=document.querySelector('#form-status'),button=leadForm.querySelector('[type="submit"]');
@@ -286,7 +291,7 @@ leadForm.addEventListener('submit',async event=>{
   if(order&&(!fuel||!orderProduct)){status.textContent='Выберите товар в каталоге и откройте заявку ещё раз.';return;}
   sendingLead=true;button.disabled=true;leadForm.setAttribute('aria-busy','true');status.textContent='Отправляем заявку…';
   try{
-    const receipt=await submitLead({name:fields.get('name'),phone,city:fields.get('city'),comment:[fields.get('comment')||'',order&&trial?`Товар: ${testDriveProduct.name}`:'',order?`Цена упаковки: ${money(orderProduct.price)}`:''].filter(Boolean).join('\n'),
+    const receipt=await submitLead({name:fields.get('name'),phone,email:fields.get('email'),city:fields.get('city'),comment:[fields.get('comment')||'',order&&trial?`Товар: ${testDriveProduct.name}`:'',order?`Цена упаковки: ${money(orderProduct.price)}`:''].filter(Boolean).join('\n'),
       form:leadForm.dataset.kind,page:window.location.href,...sessionUtms,
       consent:fields.get('consent')==='on',terms:fields.get('terms')==='on',
       fuel:order?fuel.name:'',volume:order?orderProduct.label:''});
