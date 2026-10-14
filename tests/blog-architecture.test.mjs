@@ -62,3 +62,12 @@ test('future HTML fragments use the shared template and routes without editing l
     post.content.file='public/lead-config.js';await assert.rejects(renderBlog({registry}),/content directory/);
   }finally{await rm(file,{force:true});}
 });
+test('article template has a compact author, unchanged summary and no visible draft label while retaining draft status',async()=>{
+  const registry=await loadBlogRegistry(),post=registry.posts[0],{pages}=await renderBlog({registry,includeDrafts:true}),article=pages.get(postUrl(post)),hero=article.match(/<header class="blog-hero blog-article-hero">([\s\S]*?)<\/header>/)[1];
+  assert.equal(post.status,'draft');assert.doesNotMatch(hero,/Черновик|черновик/i);assert.ok(hero.includes('Более 15 лет опыта в автомобильной сфере'));
+  assert.match(hero,/width="48" height="48"/);assert.match(hero,/<p class="blog-author-name">Игорь Бибанин<\/p>/);
+  assert.ok(hero.includes(post.cover));assert.ok(hero.includes(post.coverAlt));assert.ok(article.includes(post.summary));assert.match(article,/<summary>Содержание статьи<\/summary>/);
+  const published=structuredClone(registry);published.posts[0].status='published';published.posts[0].datePublished='2026-10-14';
+  const released=(await renderBlog({registry:published,indexable:true})).pages.get(postUrl(post));assert.match(released,/datetime="2026-10-14"/);assert.doesNotMatch(released,/Черновик|черновик/i);
+  const production=await renderBlog({registry,indexable:true});assert.equal(production.pages.has(postUrl(post)),false);assert.ok(!production.sitemap.some(p=>p.url===postUrl(post)));
+});

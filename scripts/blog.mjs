@@ -67,7 +67,11 @@ export function withHeadingIds(html){
   });
   return {html,headings};
 }
-function authorCard(author,expanded=false){return `<div class="blog-author-card${expanded?' blog-author-expanded':''}"${expanded?' data-blog-added="author"':''}><img src="${escape(author.photo)}" width="96" height="96" alt="${escape(author.name)}" loading="lazy"><div>${!expanded&&author.byline?`<p>${escape(author.byline)}</p>`:`<p class="blog-author-name">${escape(author.name)}</p><p>${escape(author.jobTitle)} · ${escape(author.companyRole)}</p>`}</div></div>`;}
+function authorCard(author,expanded=false,meta=''){
+  const name=author.profileUrl?`<a href="${escape(author.profileUrl)}">${escape(author.name)}</a>`:escape(author.name);
+  const qualification=author.professionalInfo||`${author.jobTitle} · ${author.companyRole}`;
+  return `<div class="blog-author-card${expanded?' blog-author-expanded':''}"${expanded?' data-blog-added="author"':''}><img src="${escape(author.photo)}" width="48" height="48" alt="${escape(author.name)}" loading="lazy"><div><p class="blog-author-name">${name}</p><p>${escape(qualification)}</p>${meta?`<p class="blog-article-meta">${meta}</p>`:''}</div></div>`;
+}
 function consultation(config){return `<aside class="blog-inline-consultation" data-blog-added="consultation"><p>${escape(config.title)}</p><button class="primary" type="button" data-callback>Получить консультацию</button></aside>`;}
 function enhanceContent(html,post,author){
   const config=post.consultation||{};
@@ -125,11 +129,11 @@ export async function renderBlog({registry,includeDrafts=false,indexable=false}=
   for(const post of eligible){
     const author=registry.authors[post.author],category=registry.categories.find(c=>c.id===post.category),url=postUrl(post);
     const enhanced=enhanceContent(contents.get(post.slug),post,author),{html,headings}=withHeadingIds(enhanced);
-    const toc=headings.length?`<aside class="blog-toc"><details open><summary>Оглавление</summary><nav aria-label="Разделы статьи">${headings.map(h=>`<a class="blog-toc-level-${h.level}" href="#${h.id}">${escape(h.text)}</a>`).join('')}</nav></details></aside>`:'';
+    const toc=headings.length?`<aside class="blog-toc"><details open><summary>Содержание статьи</summary><nav aria-label="Разделы статьи">${headings.map(h=>`<a class="blog-toc-level-${h.level}" href="#${h.id}">${escape(h.text)}</a>`).join('')}</nav></details></aside>`:'';
     const related=relatedPosts(registry,post);
     const after=related.length?`<section class="blog-related" aria-labelledby="blog-related-title"><h2 id="blog-related-title">Продолжить чтение</h2><div class="blog-card-grid">${related.map(p=>card(p,registry,reading.get(p.slug))).join('')}</div></section>`:'';
     const summary=post.summary?`<aside class="blog-summary" aria-labelledby="blog-summary-title"><h2 id="blog-summary-title">Главное за 30 секунд</h2><p>${escape(post.summary)}</p></aside>`:'';
-    const hero=`<header class="blog-hero"><p class="blog-kicker">${escape(category.title)}${post.status==='draft'?' · Черновик':''}</p><h1>${escape(post.title)}</h1><p class="blog-excerpt">${escape(post.excerpt)}</p>${authorCard(author)}<p class="blog-article-meta">${dates(post)}<span>${reading.get(post.slug)} мин чтения</span></p><img class="blog-hero-cover" src="${escape(post.cover)}" width="960" height="540" alt="${escape(post.coverAlt)}"></header>`;
+    const hero=`<header class="blog-hero blog-article-hero"><p class="blog-kicker">${escape(category.title)}</p><h1>${escape(post.title)}</h1><p class="blog-excerpt">${escape(post.excerpt)}</p>${authorCard(author,false,dates(post)+`<span>${reading.get(post.slug)} мин чтения</span>`)}<img class="blog-hero-cover" src="${escape(post.cover)}" width="960" height="540" alt="${escape(post.coverAlt)}"></header>`;
     const articleSchema={'@type':'BlogPosting','@id':blogOrigin+url+'#article',headline:post.title,description:post.description,url:blogOrigin+url,mainEntityOfPage:blogOrigin+url,image:blogOrigin+post.cover,articleSection:category.title,inLanguage:'ru-RU',author:{'@type':'Person',name:author.name,jobTitle:author.jobTitle,worksFor:{'@type':'Organization',name:author.company}},publisher:{'@type':'Organization',name:'ЭнерДар'}};
     if(post.datePublished)articleSchema.datePublished=post.datePublished;if(post.dateModified)articleSchema.dateModified=post.dateModified;
     page(url,{title:post.seoTitle,description:post.description,image:post.cover,type:'article',published:post.status==='published',graph:[articleSchema,schemaBreadcrumbs([['Блог','/blog/'],[category.title,categoryUrl(category)],[post.title,url]])],content:breadcrumbs([['Блог','/blog/'],[category.title,categoryUrl(category)],[post.title,null]])+`<article class="blog-article">${hero}${summary}<div class="blog-article-layout">${toc}<div class="blog-prose">${html}</div></div>${after}<p class="blog-back"><a href="/blog/">← Вернуться в блог</a></p></article>`});
