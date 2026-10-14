@@ -24,7 +24,8 @@ test('legacy article file and full approved body remain intact behind the adapte
   assert.match(article,/data-case-video="touareg"/);assert.match(article,/blog-author-expanded/);assert.match(article,/Главное за 30 секунд/);
 });
 test('preview includes a featured draft and only its category; production excludes its route and sitemap',async()=>{
-  const registry=await loadBlogRegistry(),preview=await renderBlog({registry,includeDrafts:true}),production=await renderBlog({registry,indexable:true});
+  const registry=structuredClone(await loadBlogRegistry());registry.posts[0].status='draft';registry.posts[0].datePublished=null;registry.posts[0].dateModified=null;
+  const preview=await renderBlog({registry,includeDrafts:true}),production=await renderBlog({registry,indexable:true});
   const category=categoryUrl(registry.categories.find(c=>c.id==='research'));
   assert.equal(preview.pages.size,3);assert.ok(preview.pages.has(category));assert.match(preview.pages.get('/blog/'),/blog-featured/);
   assert.doesNotMatch(preview.pages.get('/blog/'),/rashod-topliva/);
@@ -46,7 +47,7 @@ test('published fixtures have exact dates, canonical and one complete set of soc
 });
 test('registry rejects duplicate routes, false dates and unknown resources; related posts exclude drafts/current',async()=>{
   const registry=await loadBlogRegistry();
-  for(const mutate of [r=>r.posts.push({...r.posts[0]}),r=>r.posts[0].datePublished='2026-02-30',r=>r.posts[0].status='published',r=>r.posts[0].related=['missing'],r=>r.posts[0].cover='/assets/../secret']){
+  for(const mutate of [r=>r.posts.push({...r.posts[0]}),r=>r.posts[0].datePublished='2026-02-30',r=>{r.posts[0].status='published';r.posts[0].datePublished=null;},r=>r.posts[0].related=['missing'],r=>r.posts[0].cover='/assets/../secret']){
     const invalid=structuredClone(registry);mutate(invalid);assert.throws(()=>validateRegistry(invalid));
   }
   const current=registry.posts[0],others=[{...current,slug:'second',status:'published',datePublished:'2026-10-13'},{...current,slug:'draft',status:'draft'},{...current,slug:'third',status:'published',datePublished:'2026-10-13'}];
@@ -69,12 +70,13 @@ test('future HTML fragments use the shared template and routes without editing l
     post.content.file='public/lead-config.js';await assert.rejects(renderBlog({registry}),/content directory/);
   }finally{await rm(file,{force:true});}
 });
-test('article template has a compact author, unchanged summary and no visible draft label while retaining draft status',async()=>{
+test('approved first article is published with a compact author; draft fixtures remain excluded',async()=>{
   const registry=await loadBlogRegistry(),post=registry.posts[0],{pages}=await renderBlog({registry,includeDrafts:true}),article=pages.get(postUrl(post)),hero=article.match(/<header class="blog-hero blog-article-hero">([\s\S]*?)<\/header>/)[1];
-  assert.equal(post.status,'draft');assert.doesNotMatch(hero,/Черновик|черновик/i);assert.ok(hero.includes('Более 15 лет опыта в автомобильной сфере'));
+  assert.equal(post.status,'published');assert.equal(post.datePublished,'2026-10-14');assert.doesNotMatch(hero,/Черновик|черновик/i);assert.ok(hero.includes('Более 15 лет опыта в автомобильной сфере'));
   assert.match(hero,/width="48" height="48"/);assert.match(hero,/<p class="blog-author-name">Игорь Бибанин<\/p>/);
   assert.ok(hero.includes(post.cover));assert.ok(hero.includes(post.coverAlt));assert.ok(article.includes(post.summary));assert.match(article,/<summary>Содержание статьи<\/summary>/);
   const published=structuredClone(registry);published.posts[0].status='published';published.posts[0].datePublished='2026-10-14';
   const released=(await renderBlog({registry:published,indexable:true})).pages.get(postUrl(post));assert.match(released,/datetime="2026-10-14"/);assert.doesNotMatch(released,/Черновик|черновик/i);
-  const production=await renderBlog({registry,indexable:true});assert.equal(production.pages.has(postUrl(post)),false);assert.ok(!production.sitemap.some(p=>p.url===postUrl(post)));
+  const production=await renderBlog({registry,indexable:true});assert.equal(production.pages.has(postUrl(post)),true);assert.ok(production.sitemap.some(p=>p.url===postUrl(post)));
+  const draft=structuredClone(registry);draft.posts[0].status='draft';draft.posts[0].datePublished=null;const draftProduction=await renderBlog({registry:draft,indexable:true});assert.equal(draftProduction.pages.has(postUrl(post)),false);assert.ok(!draftProduction.sitemap.some(p=>p.url===postUrl(post)));
 });

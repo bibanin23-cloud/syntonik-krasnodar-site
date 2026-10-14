@@ -4,6 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 import {fuels,volumes} from '../public/data/catalog.js';
+import {loadBlogRegistry,postUrl} from './blog.mjs';
 const require=createRequire(import.meta.url);
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -213,6 +214,31 @@ try{
   await page.locator('#close-dialog').click();
   await page.unroute(mockLeadPattern);
   report.checks.push('form network error');
+  const blogRegistry=await loadBlogRegistry(),blogPage=await context.newPage();
+  blogPage.on('pageerror',error=>report.errors.push(error.message));
+  await blogPage.goto(new URL('blog/',url).href);
+  for(const post of blogRegistry.posts.filter(post=>post.status==='published')){
+    const articleUrl=new URL(postUrl(post).slice(1),url).href;
+    assert.equal(await blogPage.locator(`a[href="${new URL(articleUrl).pathname}"]`).count()>0,true,'Published article must be linked in the blog');
+    assert.equal((await blogPage.goto(articleUrl)).status(),200);
+    assert.equal(await blogPage.locator('h1').count(),1);assert.equal(await blogPage.title(),post.seoTitle);
+    assert.equal(await blogPage.locator('meta[name="description"]').getAttribute('content'),post.description);
+    assert.equal(await blogPage.locator('link[rel="canonical"]').getAttribute('href'),'https://syntonik-krasnodar.ru'+postUrl(post));
+    assert.equal(await blogPage.locator(`time[datetime="${post.datePublished}"]`).count()>0,true);
+    const schema=await blogPage.locator('script[type="application/ld+json"]').evaluateAll(elements=>elements.flatMap(element=>JSON.parse(element.textContent)['@graph']||[]));
+    const posting=schema.find(item=>item['@type']==='BlogPosting');assert.equal(posting.datePublished,post.datePublished);assert.equal(posting.author.name,blogRegistry.authors[post.author].name);
+    const sitemap=await (await context.request.get(new URL('sitemap.xml',url).href)).text();assert.ok(sitemap.includes('https://syntonik-krasnodar.ru'+postUrl(post)));
+    await blogPage.goto(new URL('blog/',url).href);
+  }
+  if(process.env.TEST_REAL_LEAD!=='true'){
+    await blogPage.route(mockLeadPattern,async route=>{sent.push(JSON.parse(route.request().postData()));await route.fulfill({status:200,headers:{'Access-Control-Allow-Origin':'*'},contentType:'application/json',body:'{"success":true,"notifications":{"telegram":"sent","max":"disabled"}}'});});
+    await blogPage.evaluate(()=>sessionStorage.clear());
+    await blogPage.goto(new URL('blog/?utm_source=release-blog&utm_medium=test&utm_campaign=prelaunch',url).href);
+    await blogPage.locator('.blog-header [data-callback]').click();const blogForm=blogPage.locator('#blog-lead-form');
+    await blogForm.locator('[name="name"]').fill('Техническая проверка');await blogForm.locator('[name="phone"]').fill('9991234567');await blogForm.locator('[name="email"]').fill('test@example.invalid');await blogForm.locator('[name="consent"]').check();
+    const count=sent.length;await blogForm.locator('[type="submit"]').dblclick();await blogPage.locator('#blog-lead-success').waitFor({state:'visible'});assert.equal(sent.length,count+1);assert.equal(sent.at(-1).email,'test@example.invalid');assert.equal(sent.at(-1).phone,'+79991234567');assert.equal(sent.at(-1).utm_source,'release-blog');
+  }
+  await blogPage.close();report.checks.push('published blog routes, exact release dates, author/schema/canonical/sitemap and blog consultation with mock delivery');
   if(process.env.TEST_REAL_LEAD==='true'){
     assert(url.startsWith('https://'),'Real delivery must be tested from the published HTTPS site');
     // Reuse the test receipt on a rerun instead of adding another row.

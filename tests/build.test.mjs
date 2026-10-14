@@ -41,7 +41,7 @@ test('preview build resolves repository paths without changing approved content'
     assert.match(await readFile(outDir+'robots.txt','utf8'),/Disallow: \//);
   }finally{await rm(outDir,{recursive:true,force:true});}
 });
-test('indexing opens only on the primary domain; legal pages stay noindex and draft articles are excluded',async()=>{
+test('indexing opens only on the primary domain; legal pages stay noindex and the approved article is published',async()=>{
   await assert.rejects(build({basePath:'/site',siteUrl:'https://syntonik-krasnodar.ru/',indexable:true,outDir}));
   await assert.rejects(build({siteUrl:'https://example.com/',indexable:true,outDir}));
   try{
@@ -49,8 +49,9 @@ test('indexing opens only on the primary domain; legal pages stay noindex and dr
     assert.match(await readFile(outDir+'index.html','utf8'),/content="index,follow"/);
     assert.match(await readFile(outDir+'legal/privacy/index.html','utf8'),/noindex/);
     assert.match(await readFile(outDir+'blog/index.html','utf8'),/content="index,follow"/);
-    await assert.rejects(stat(outDir+'blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html'));
-    assert.doesNotMatch(await readFile(outDir+'sitemap.xml','utf8'),/bezopasen-li-syntonik/);
+    await stat(outDir+'blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html');
+    const article=await readFile(outDir+'blog/bezopasen-li-syntonik-dlya-dvigatelya/index.html','utf8');assert.match(article,/content="index,follow"/);assert.match(article,/datetime="2026-10-14"/);
+    assert.match(await readFile(outDir+'sitemap.xml','utf8'),/bezopasen-li-syntonik/);
     assert.match(await readFile(outDir+'sitemap.xml','utf8'),/https:\/\/syntonik-krasnodar\.ru\/blog\//);
     assert.doesNotMatch(await readFile(outDir+'robots.txt','utf8'),/Disallow: \/blog\//);
     assert.match(await readFile(outDir+'robots.txt','utf8'),/Sitemap: https:\/\/syntonik-krasnodar.ru\/sitemap.xml/);
