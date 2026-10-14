@@ -31,7 +31,8 @@
       "profileUrl": null,
       "company": "ЭнерДар",
       "companyRole": "Руководитель компании «ЭнерДар»",
-      "photo": "/assets/dealer/igor.jpeg"
+      "photo": "/assets/dealer/igor-blog-v2.png",
+      "photoFraming": "portrait"
     }
   },
   "posts": [

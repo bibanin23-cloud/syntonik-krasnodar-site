@@ -70,7 +70,7 @@ export function withHeadingIds(html){
 function authorCard(author,expanded=false,meta=''){
   const name=author.profileUrl?`<a href="${escape(author.profileUrl)}">${escape(author.name)}</a>`:escape(author.name);
   const qualification=author.professionalInfo||`${author.jobTitle} · ${author.companyRole}`;
-  return `<div class="blog-author-card${expanded?' blog-author-expanded':''}"${expanded?' data-blog-added="author"':''}><img src="${escape(author.photo)}" width="48" height="48" alt="${escape(author.name)}" loading="lazy"><div><p class="blog-author-name">${name}</p><p>${escape(qualification)}</p>${meta?`<p class="blog-article-meta">${meta}</p>`:''}</div></div>`;
+  return `<div class="blog-author-card${expanded?' blog-author-expanded':''}"${expanded?' data-blog-added="author"':''}><span class="blog-author-photo${author.photoFraming==='portrait'?' blog-author-photo-portrait':''}"><img src="${escape(author.photo)}" width="48" height="48" alt="${escape(author.name)}" loading="lazy"></span><div><p class="blog-author-name">${name}</p><p>${escape(qualification)}</p>${meta?`<p class="blog-article-meta">${meta}</p>`:''}</div></div>`;
 }
 function consultation(config){return `<aside class="blog-inline-consultation" data-blog-added="consultation"><p>${escape(config.title)}</p><button class="primary" type="button" data-callback>Получить консультацию</button></aside>`;}
 function enhanceContent(html,post,author){
