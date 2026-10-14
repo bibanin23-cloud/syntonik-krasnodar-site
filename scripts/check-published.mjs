@@ -73,7 +73,7 @@ try{
   await page.goto(url,{waitUntil:'load'});
   report.performance=await page.evaluate(()=>({navigation:performance.getEntriesByType('navigation').map(entry=>({loadMs:entry.loadEventEnd,domReadyMs:entry.domContentLoadedEventEnd})),paint:performance.getEntriesByType('paint').map(entry=>({name:entry.name,ms:entry.startTime})),resources:performance.getEntriesByType('resource').length}));
   assert.deepEqual(await page.locator('.site-header nav a').allTextContents(),['О продукте','Отзывы','Контакты','Блог']);
-  assert.deepEqual(await page.locator('.site-header nav a').evaluateAll(links=>links.map(link=>link.getAttribute('href'))),['#about','#cases','#dealer','/blog/']);
+  assert.deepEqual(await page.locator('.site-header nav a').evaluateAll(links=>links.map(link=>link.getAttribute('href'))),['#about','#cases','#dealer',new URL('blog/',url).pathname]);
   assert.equal(await page.locator('a[href="#how"]').count(),0);
   for(const href of ['#about','#cases','#dealer']){
     await page.locator(`.site-header nav a[href="${href}"]`).click();
