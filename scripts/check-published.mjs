@@ -122,6 +122,8 @@ try{
   for(const fuel of ['petrol','diesel','lpg','mazut']){
     await page.locator(`#fuel-tabs [data-fuel="${fuel}"]`).click();
     assert.equal(await page.locator('#products .product').count(),5);
+    await page.locator('#products img').evaluateAll(images=>images.forEach(img=>{img.loading='eager';}));
+    await page.waitForFunction(()=>[...document.querySelectorAll('#products img')].every(img=>img.complete&&img.naturalWidth>0));
     await page.locator('#products img').evaluateAll(images=>Promise.all(images.map(img=>img.decode())));
     assert((await page.locator('#products img').first().getAttribute('src')).includes(`/${fuel}-`));
     for(const [index,volume] of volumes.entries()){
@@ -198,7 +200,9 @@ try{
     await trial.locator('[type="submit"]').dblclick();await page.locator('#lead-success').waitFor({state:'visible'});assert.equal(sent.length,count+1);assert.equal(sent.at(-1).fuel,fuel.name);assert.equal(sent.at(-1).volume,'15 мл');assert.equal(sent.at(-1).phone,'+79991234567');assert.match(sent.at(-1).comment,/Syntonik TEST DRIVE/);assert.match(sent.at(-1).comment,/690/);assert.equal(sent.at(-1).utm_source,'release-check');
     await page.locator('#close-dialog').click();
   }
-  await page.locator('#open-test-drive-terms').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#test-drive-terms').evaluate(el=>el.open),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#test-drive-terms').evaluate(el=>el.open),false);
+  // The dialog close event restores focus asynchronously before the next keyboard action.
+  await page.waitForFunction(()=>!document.querySelector('#lead-dialog').open&&document.activeElement?.matches('button[data-test-drive]'));
+  await page.locator('#open-test-drive-terms').press('Enter');await page.waitForFunction(()=>document.querySelector('#test-drive-terms').open);assert.equal(await page.locator('#test-drive-terms').evaluate(el=>el.open),true);await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#test-drive-terms').open);assert.equal(await page.locator('#test-drive-terms').evaluate(el=>el.open),false);
   report.checks.push('TEST DRIVE: four fuels, final changed selection, required fuel, optional email, 15 ml/690, normalized phone, single mock request, keyboard return terms');
   await page.unroute(mockLeadPattern);
   report.checks.push('both forms: validation, single request, success, all fields and UTM');
@@ -214,6 +218,7 @@ try{
   await page.locator('#close-dialog').click();
   await page.unroute(mockLeadPattern);
   report.checks.push('form network error');
+  if(process.env.TEST_REAL_LEAD!=='true')await page.close();
   const blogRegistry=await loadBlogRegistry(),blogPage=await context.newPage();
   blogPage.on('pageerror',error=>report.errors.push(error.message));
   await blogPage.goto(new URL('blog/',url).href);
