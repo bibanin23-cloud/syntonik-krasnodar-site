@@ -231,7 +231,7 @@ document.addEventListener('click',event=>{
   if(calcFuelButton){calculatorFuel=fuels.find(f=>f.id===calcFuelButton.dataset.calcFuel);lastChosenFuelId=calculatorFuel.id;renderCalculatorTabs();document.querySelector(`[data-calc-fuel="${calculatorFuel.id}"]`).focus();}
   if(event.target.closest('[data-catalog]')){
     if(location.hash!=='#catalog')location.hash='catalog';
-    else document.querySelector('#catalog').scrollIntoView({behavior:'smooth',block:'start'});
+    else document.querySelector('#catalog').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
   }
   const order=event.target.closest('[data-order]');if(order)openForm('order',order.dataset.fuel,order.dataset.volume,order.hasAttribute('data-test-drive'));
   if(event.target.closest('[data-callback]'))openForm('callback');
